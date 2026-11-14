@@ -17,6 +17,7 @@ import type {
   Sender,
 } from '../interfaces/chat-message.interface';
 import type { CreateOrderRequest, Order } from '../interfaces/order.interface';
+import { formatPrice } from './currency';
 
 export const MAX_TEXT_LENGTH = 1000;
 export const API_TIMEOUT_MS = 10_000;
@@ -212,12 +213,21 @@ export async function answerOffer(
   if (!result.snapshot.exists()) throw new OfferAlreadyAnsweredError('La oferta ya no existe (el comercio la canceló)');
 }
 
-/** Publica en el chat la confirmación del pedido (mensaje `order_accepted`). */
+/** Texto de la confirmación: nombre y precio, para distinguir ofertas del mismo producto. */
+export function orderAcceptedText(product: Product): string {
+  return `✅ Pedido confirmado: ${product.name} · ${formatPrice(product.price, product.currency)}`;
+}
+
+/**
+ * Publica en el chat la confirmación del pedido (mensaje `order_accepted`).
+ * El `orderId` (UUID de la API) viaja en su propio campo y ambas apps lo muestran
+ * como “N.º de pedido”, así se sabe exactamente qué oferta se aceptó.
+ */
 export async function sendOrderAccepted(
   chatId: string,
   orderId: string,
   offerMessageId: string,
-  productName: string,
+  product: Product,
 ): Promise<string> {
   try {
     return await pushMessage(chatId, {
@@ -225,7 +235,7 @@ export async function sendOrderAccepted(
       type: 'order_accepted',
       orderId,
       offerMessageId,
-      text: `✅ Pedido confirmado: ${productName}`,
+      text: orderAcceptedText(product),
       createdAt: Date.now(),
     });
   } catch (error: unknown) {
@@ -335,7 +345,7 @@ export async function approveOffer(
   await answerOffer(chatId, messageId, 'accepted', orderId);
 
   try {
-    await sendOrderAccepted(chatId, orderId, messageId, offer.product.name);
+    await sendOrderAccepted(chatId, orderId, messageId, offer.product);
     return { orderId, recovered };
   } catch (error: unknown) {
     return { orderId, recovered, warning: describeError(error) };

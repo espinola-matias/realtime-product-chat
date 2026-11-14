@@ -1,0 +1,149 @@
+.currency-select {
+  position: relative;
+  min-width: 0;
+}
+
+.currency-select__button {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.currency-select__button:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+.currency-select__button:focus-visible,
+.currency-select--open .currency-select__button {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+.currency-select__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.currency-select__symbol {
+  min-width: 3.2ch;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.currency-select__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currency-select__chevron {
+  flex-shrink: 0;
+  color: var(--brand);
+  transition: transform 0.18s ease;
+}
+
+.currency-select--open .currency-select__chevron {
+  transform: rotate(180deg);
+}
+
+/*
+ * Lista desplegable: tarjeta redondeada. Se abre hacia ARRIBA porque el formulario
+ * vive al pie del chat y hacia abajo quedaría recortada por el panel.
+ */
+.currency-select__list {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  box-shadow: 0 22px 48px -18px rgb(0 0 0 / 0.95);
+  outline: none;
+  animation: currency-list-in 0.14s ease-out;
+}
+
+.currency-select__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 0.92rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.currency-select__option + .currency-select__option {
+  margin-top: 2px;
+}
+
+/* Resaltado al pasar el mouse / navegar con teclado: naranja suave */
+.currency-select__option--active {
+  background: var(--brand-tint);
+}
+
+/* Moneda elegida: naranja de marca */
+.currency-select__option--selected {
+  background: var(--brand);
+  color: var(--text-on-brand);
+  font-weight: 700;
+}
+
+.currency-select__option--selected .currency-select__symbol,
+.currency-select__option--selected .currency-select__code {
+  color: var(--text-on-brand);
+}
+
+.currency-select__option--selected.currency-select__option--active {
+  background: var(--brand-strong);
+}
+
+.currency-select__code {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+@keyframes currency-list-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currency-select__list {
+    animation: none;
+  }
+}

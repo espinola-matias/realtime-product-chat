@@ -7,6 +7,14 @@ import {
   type Unsubscribe,
 } from 'firebase/database';
 import { getDb } from '../config/firebase';
+import {
+  CURRENCIES,
+  currencyDecimals,
+  formatAmount,
+  hasValidDecimals,
+  isSupportedCurrency,
+  MAX_PRICE,
+} from './currency';
 import type {
   ChatMessage,
   ChatMessageData,
@@ -146,8 +154,6 @@ export async function sendTextMessage(
 
 /* ─────────────────────────────── Ofertas (comercio) ─────────────────────────────── */
 
-const CURRENCY_PATTERN = /^[A-Z]{3}$/;
-
 function isHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
@@ -164,9 +170,18 @@ export function validateProduct(product: Product): string[] {
   if (!product.name.trim()) errors.push('El nombre del producto es obligatorio');
   if (!Number.isFinite(product.price) || product.price <= 0) {
     errors.push('El precio debe ser un número mayor que cero');
+  } else if (product.price > MAX_PRICE) {
+    errors.push(`El precio no puede superar ${formatAmount(MAX_PRICE, 0)}`);
   }
-  if (!CURRENCY_PATTERN.test(product.currency)) {
-    errors.push('La moneda debe ser un código de 3 letras en mayúscula (ej. COP)');
+  if (!isSupportedCurrency(product.currency)) {
+    errors.push(`Moneda no admitida. Use: ${CURRENCIES.map((c) => c.code).join(', ')}`);
+  } else if (Number.isFinite(product.price) && !hasValidDecimals(product.price, currencyDecimals(product.currency))) {
+    const decimals = currencyDecimals(product.currency);
+    errors.push(
+      decimals === 0
+        ? `El precio en ${product.currency} no lleva decimales`
+        : `El precio en ${product.currency} admite como máximo ${decimals} decimales`,
+    );
   }
   if (product.imageUrl !== undefined && !isHttpUrl(product.imageUrl)) {
     errors.push('La URL de la imagen debe empezar por http:// o https://');

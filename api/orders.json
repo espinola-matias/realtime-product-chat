@@ -120,5 +120,45 @@
     },
     "status": "created",
     "createdAt": 1794678007801
+  },
+  {
+    "id": "f60ab174-a45f-4916-9d5d-390880b626d6",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QSrHf_EWu7-j9foBw",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "PYG",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794683409451
+  },
+  {
+    "id": "444a9dbc-e7d8-4cda-aba5-a30db74b7431",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QU7lHkzeqQfxIIqGt",
+    "product": {
+      "id": "p-102",
+      "name": "Chipa (docena)",
+      "price": 15000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794683772533
+  },
+  {
+    "id": "dba3ede0-a926-4e81-90b6-c1b8374b4f01",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QU9T8ZINPracr7S1K",
+    "product": {
+      "id": "p-103",
+      "name": "Limonada de coco",
+      "price": 4.5,
+      "currency": "USD"
+    },
+    "status": "created",
+    "createdAt": 1794683783344
   }
 ]

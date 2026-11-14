@@ -11,6 +11,16 @@ const timeFormat = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '
 
 const senderLabel: Record<Sender, string> = { cliente: 'Cliente', comercio: 'Comercio' };
 
+/** N.º de pedido (UUID de la API). Un clic lo selecciona completo. */
+function OrderNumber({ orderId }: { orderId: string }) {
+  return (
+    <div className="bubble__order">
+      <span className="bubble__order-label">N.º de pedido</span>
+      <code className="bubble__order-id">{orderId}</code>
+    </div>
+  );
+}
+
 export function MessageBubble({ message, viewer }: MessageBubbleProps) {
   const own = message.sender === viewer;
   const isConfirmation = message.type === 'order_accepted';
@@ -28,6 +38,7 @@ export function MessageBubble({ message, viewer }: MessageBubbleProps) {
       <div className={classes}>
         {!own && <span className="bubble__sender">{senderLabel[message.sender]}</span>}
         <p className="bubble__text">{message.text}</p>
+        {message.type === 'order_accepted' && <OrderNumber orderId={message.orderId} />}
         <time className="bubble__time" dateTime={new Date(message.createdAt).toISOString()}>
           {timeFormat.format(message.createdAt)}
         </time>

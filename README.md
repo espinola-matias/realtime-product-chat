@@ -44,7 +44,7 @@ Cada pieza sigue el patrón `src/[entidad]/[componentes]`.
 | `sender`, `type` y `createdAt` no cambian después de creados; `createdAt` no puede estar en el futuro (> 5 min) | Reescribir la autoría o la fecha de un mensaje |
 | `text`: 1–1000 caracteres | Mensajes vacíos o gigantes |
 | Los mensajes `text` y `order_accepted` no se pueden editar ni borrar | Alterar el historial |
-| `product_offer` solo con `sender: comercio`, nace con `status: pending` y con `product` válido (`id`, `name`, `price > 0`, `currency` de 3 letras mayúsculas, `imageUrl` http/https opcional) | Ofertas del cliente, ofertas ya aceptadas, precios ≤ 0 |
+| `product_offer` solo con `sender: comercio`, nace con `status: pending` y con `product` válido (`id`, `name`, `price` entre 0 y 9.999.999.999, `currency` de 3 letras mayúsculas, `imageUrl` http/https opcional) | Ofertas del cliente, ofertas ya aceptadas, precios ≤ 0 o desmesurados |
 | Una oferta solo se modifica mientras está `pending`: puede pasar **una vez** a `accepted` (exige `orderId`) o `rejected`; el comercio puede corregir el producto o borrarla (cancelar) | Responder dos veces, “desaceptar”, cambiar el producto de una oferta ya respondida |
 | `order_accepted` solo con `sender: cliente` y referenciando una oferta `accepted` con el mismo `orderId` | Confirmaciones falsas |
 
@@ -102,7 +102,7 @@ npm run start:dev         # http://localhost:3000
 | POST   | `/orders`     | 201 pedido creado · 400 datos inválidos · 409 la oferta ya tiene pedido (incluye `orderId` del pedido existente) |
 | GET    | `/orders/:id` | 200 pedido · 404 no existe                                                 |
 
-Validaciones de `POST /orders`: `chatId`, `messageId` y `product.id` obligatorios; `product.price` número mayor que cero; `product.currency` código ISO de 3 letras; `product.imageUrl` URL opcional; campos extra rechazados; si `CHAT_ID` está definido, el `chatId` debe coincidir. Los pedidos se guardan en `orders.json` (`ORDERS_FILE`).
+Validaciones de `POST /orders`: `chatId`, `messageId` y `product.id` obligatorios; `product.price` número mayor que cero, máximo 9.999.999.999 y hasta 2 decimales; `product.currency` código ISO de 3 letras; `product.imageUrl` URL opcional; campos extra rechazados; si `CHAT_ID` está definido, el `chatId` debe coincidir. Los pedidos se guardan en `orders.json` (`ORDERS_FILE`).
 
 **Probar a mano (PowerShell)**
 

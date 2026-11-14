@@ -100,6 +100,8 @@ describe('OrdersController (e2e)', () => {
     ['price = 0', { ...validBody, product: { ...validBody.product, price: 0 } }],
     ['price negativo', { ...validBody, product: { ...validBody.product, price: -10 } }],
     ['price como texto', { ...validBody, product: { ...validBody.product, price: '32000' } }],
+    ['price mayor al máximo', { ...validBody, product: { ...validBody.product, price: 10_000_000_000 } }],
+    ['price con 3 decimales', { ...validBody, product: { ...validBody.product, price: 12.345 } }],
     ['campo no permitido', { ...validBody, hack: true }],
     ['chatId de otro chat', { ...validBody, chatId: 'otro-chat' }],
   ])('POST /orders con %s → 400', (_caso, body) => {

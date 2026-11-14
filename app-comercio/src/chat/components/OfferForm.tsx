@@ -1,6 +1,20 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { Product } from '../interfaces/chat-message.interface';
 import { validateProduct } from '../services/chat.service';
+import { CurrencySelect } from './CurrencySelect';
+import {
+  amountToInput,
+  CURRENCIES,
+  currencyDecimals,
+  DEFAULT_CURRENCY,
+  formatAmount,
+  getCurrency,
+  isSupportedCurrency,
+  MAX_PRICE,
+  parseAmountInput,
+  sanitizeAmountInput,
+  type CurrencyCode,
+} from '../services/currency';
 import './OfferForm.css';
 
 interface OfferFormProps {
@@ -14,26 +28,41 @@ interface OfferFormProps {
 interface FormState {
   id: string;
   name: string;
+  /** Texto del campo, ya formateado: "32.000" o "12,50". */
   price: string;
-  currency: string;
+  currency: CurrencyCode;
   imageUrl: string;
 }
 
 /** Productos de ejemplo para la demo (rellenan el formulario con un clic). */
 const PRESETS: readonly Product[] = [
   { id: 'p-101', name: 'Bandeja paisa', price: 32000, currency: 'COP', imageUrl: 'https://ejemplo.com/bandeja.jpg' },
-  { id: 'p-102', name: 'Ajiaco santafereño', price: 28000, currency: 'COP' },
-  { id: 'p-103', name: 'Limonada de coco', price: 9500, currency: 'COP' },
+  { id: 'p-102', name: 'Chipa (docena)', price: 15000, currency: 'PYG' },
+  { id: 'p-103', name: 'Limonada de coco', price: 4.5, currency: 'USD' },
 ];
 
-const EMPTY: FormState = { id: '', name: '', price: '', currency: 'COP', imageUrl: '' };
+const EMPTY: FormState = { id: '', name: '', price: '', currency: DEFAULT_CURRENCY, imageUrl: '' };
+
+const isSignificant = (char: string): boolean => /[\d,]/.test(char);
+
+/** Posición en `text` justo después del carácter significativo número `count` (dígitos y coma). */
+function caretAfterSignificant(text: string, count: number): number {
+  if (count <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (isSignificant(text[i])) seen++;
+    if (seen === count) return i + 1;
+  }
+  return text.length;
+}
 
 function toFormState(product: Product): FormState {
+  const currency = isSupportedCurrency(product.currency) ? product.currency : DEFAULT_CURRENCY;
   return {
     id: product.id,
     name: product.name,
-    price: String(product.price),
-    currency: product.currency,
+    price: amountToInput(product.price, currencyDecimals(currency)),
+    currency,
     imageUrl: product.imageUrl ?? '',
   };
 }
@@ -43,8 +72,8 @@ function toProduct(form: FormState): Product {
   return {
     id: form.id.trim(),
     name: form.name.trim(),
-    price: form.price.trim() === '' ? Number.NaN : Number(form.price),
-    currency: form.currency.trim().toUpperCase(),
+    price: parseAmountInput(form.price),
+    currency: form.currency,
     ...(imageUrl ? { imageUrl } : {}),
   };
 }
@@ -54,9 +83,49 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const fieldId = useId();
+  const priceRef = useRef<HTMLInputElement>(null);
+  /** Posición del cursor a restaurar tras reformatear el precio. */
+  const pendingCaret = useRef<number | null>(null);
 
-  const update = (field: keyof FormState) => (value: string) =>
+  const currency = getCurrency(form.currency) ?? CURRENCIES[0];
+
+  useLayoutEffect(() => {
+    if (pendingCaret.current === null || !priceRef.current) return;
+    priceRef.current.setSelectionRange(pendingCaret.current, pendingCaret.current);
+    pendingCaret.current = null;
+  });
+
+  const update = (field: 'id' | 'name' | 'imageUrl') => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  function handlePriceChange(event: ChangeEvent<HTMLInputElement>) {
+    const raw = event.target.value;
+    const caret = event.target.selectionStart ?? raw.length;
+    const next = sanitizeAmountInput(raw, currency.decimals);
+
+    if (next === null) {
+      // Excede el máximo o los decimales: se ignora la tecla y el cursor vuelve a su sitio.
+      const inserted = raw.length - form.price.length;
+      pendingCaret.current = Math.max(0, caret - Math.max(inserted, 0));
+      setForm((prev) => ({ ...prev }));
+      return;
+    }
+
+    const significantBefore = [...raw.slice(0, caret)].filter(isSignificant).length;
+    pendingCaret.current = caretAfterSignificant(next, significantBefore);
+    setForm((prev) => ({ ...prev, price: next }));
+  }
+
+  function handleCurrencyChange(code: CurrencyCode) {
+    setForm((prev) => {
+      // Al pasar a una moneda sin decimales (o con menos), se recortan los sobrantes.
+      const decimals = currencyDecimals(code);
+      const [integer, fraction = ''] = prev.price.split(',');
+      const price =
+        decimals === 0 || !prev.price.includes(',') ? integer : `${integer},${fraction.slice(0, decimals)}`;
+      return { ...prev, currency: code, price };
+    });
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -77,6 +146,7 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
   }
 
   const title = mode === 'create' ? 'Nueva oferta de producto' : 'Corregir oferta';
+  const pricePlaceholder = currency.decimals > 0 ? '12,50' : '32.000';
 
   return (
     <form className="offer-form" onSubmit={handleSubmit} aria-label={title} noValidate>
@@ -112,6 +182,7 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
             value={form.name}
             onChange={(e) => update('name')(e.target.value)}
             placeholder="Bandeja paisa"
+            maxLength={200}
             required
           />
         </label>
@@ -122,33 +193,47 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
             value={form.id}
             onChange={(e) => update('id')(e.target.value)}
             placeholder="p-101"
+            maxLength={100}
             required
           />
         </label>
+        {/*
+          No es <label>: un label reenvía cada clic interno a su control asociado,
+          y eso volvía a abrir la lista justo después de elegir una moneda.
+        */}
+        <div className="field">
+          <span id={`${fieldId}-currency-label`}>Moneda</span>
+          <CurrencySelect
+            id={`${fieldId}-currency`}
+            labelledBy={`${fieldId}-currency-label`}
+            value={form.currency}
+            onChange={handleCurrencyChange}
+            disabled={submitting}
+          />
+        </div>
         <label className="field" htmlFor={`${fieldId}-price`}>
           <span>Precio</span>
-          <input
-            id={`${fieldId}-price`}
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="any"
-            value={form.price}
-            onChange={(e) => update('price')(e.target.value)}
-            placeholder="32000"
-            required
-          />
-        </label>
-        <label className="field" htmlFor={`${fieldId}-currency`}>
-          <span>Moneda</span>
-          <input
-            id={`${fieldId}-currency`}
-            value={form.currency}
-            onChange={(e) => update('currency')(e.target.value.toUpperCase())}
-            maxLength={3}
-            placeholder="COP"
-            required
-          />
+          <div className="field__affix">
+            <span className="field__prefix" aria-hidden="true">
+              {currency.symbol}
+            </span>
+            <input
+              ref={priceRef}
+              id={`${fieldId}-price`}
+              type="text"
+              inputMode={currency.decimals > 0 ? 'decimal' : 'numeric'}
+              autoComplete="off"
+              value={form.price}
+              onChange={handlePriceChange}
+              placeholder={pricePlaceholder}
+              aria-describedby={`${fieldId}-price-hint`}
+              required
+            />
+          </div>
+          <small id={`${fieldId}-price-hint`} className="field__hint">
+            {currency.decimals > 0 ? `Hasta ${currency.decimals} decimales con coma. ` : 'Sin decimales. '}
+            Máx. {formatAmount(MAX_PRICE, 0)}
+          </small>
         </label>
         <label className="field field--wide" htmlFor={`${fieldId}-image`}>
           <span>URL de la imagen (opcional)</span>
@@ -158,6 +243,7 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
             value={form.imageUrl}
             onChange={(e) => update('imageUrl')(e.target.value)}
             placeholder="https://…"
+            maxLength={2000}
           />
         </label>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { OfferStatus, ProductOfferMessage } from '../interfaces/chat-message.interface';
+import { formatPrice } from '../services/currency';
 import './ProductOfferCard.css';
 
 interface ProductOfferCardProps {
@@ -19,19 +20,6 @@ const statusLabel: Record<OfferStatus, string> = {
 };
 
 const timeFormat = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit' });
-
-function formatPrice(price: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  } catch {
-    return `${currency} ${price}`;
-  }
-}
 
 function ProductImage({ name, imageUrl }: { name: string; imageUrl?: string }) {
   const [failed, setFailed] = useState(false);
@@ -75,7 +63,7 @@ export function ProductOfferCard({ message, onEdit, onCancel, busy = false }: Pr
 
         {status === 'accepted' && message.orderId && (
           <p className="offer__note">
-            Pedido <code>{message.orderId}</code>
+            N.º de pedido <code>{message.orderId}</code>
           </p>
         )}
         {isPending && <p className="offer__note">Esperando respuesta del cliente…</p>}

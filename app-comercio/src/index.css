@@ -54,6 +54,7 @@
   --font-display: 'Sora Variable', 'Plus Jakarta Sans Variable', system-ui, sans-serif;
 
   color-scheme: dark;
+  accent-color: var(--brand); /* controles nativos (checkbox, radio, rango…) en naranja */
   font-family: var(--font-body);
   color: var(--text);
   background: var(--bg);
@@ -90,8 +91,16 @@ code {
   scrollbar-color: var(--border-strong) transparent;
 }
 
+/* Texto seleccionado (también dentro de campos y burbujas) en naranja, no en celeste. */
 ::selection {
-  background: var(--brand-tint);
+  background: rgb(255 122 26 / 0.45);
+  color: var(--text);
+}
+
+.bubble--own ::selection,
+.bubble--other ::selection {
+  background: var(--text-on-brand);
+  color: var(--brand-soft);
 }
 
 :focus-visible {

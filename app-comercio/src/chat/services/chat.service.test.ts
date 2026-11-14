@@ -198,6 +198,10 @@ describe('validateProduct', () => {
     ['precio negativo', { price: -5 }],
     ['precio NaN', { price: Number.NaN }],
     ['moneda inválida', { currency: 'pesos' }],
+    ['moneda no admitida', { currency: 'JPY' }],
+    ['precio mayor al máximo', { price: 10_000_000_000 }],
+    ['decimales en COP', { price: 32000.5 }],
+    ['precio infinito', { price: Number.POSITIVE_INFINITY }],
     ['imagen sin http', { imageUrl: 'ftp://x/y.jpg' }],
   ])('rechaza %s', (_caso, override) => {
     expect(validateProduct({ ...product, ...override })).toHaveLength(1);

@@ -9,9 +9,13 @@ import {
   IsString,
   IsUrl,
   Matches,
+  Max,
   ValidateNested,
 } from 'class-validator';
 import { OrderProduct } from '../interfaces/order.interface';
+
+/** Mismo tope que el comercio (10 dígitos enteros). */
+export const MAX_PRICE = 9_999_999_999;
 
 export class ProductDto implements OrderProduct {
   @IsString({ message: 'product.id debe ser texto' })
@@ -23,10 +27,11 @@ export class ProductDto implements OrderProduct {
   name!: string;
 
   @IsNumber(
-    { allowNaN: false, allowInfinity: false },
-    { message: 'product.price debe ser un número' },
+    { allowNaN: false, allowInfinity: false, maxDecimalPlaces: 2 },
+    { message: 'product.price debe ser un número con máximo 2 decimales' },
   )
   @IsPositive({ message: 'product.price debe ser mayor que cero' })
+  @Max(MAX_PRICE, { message: 'product.price no puede superar 9.999.999.999' })
   price!: number;
 
   @IsString({ message: 'product.currency debe ser texto' })

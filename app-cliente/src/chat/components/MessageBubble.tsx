@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { OrderAcceptedMessage, Sender, TextMessage } from '../interfaces/chat-message.interface';
 import { colors } from './theme';
 
@@ -40,6 +40,15 @@ export function MessageBubble({ message, viewer }: MessageBubbleProps) {
         >
           {message.text}
         </Text>
+        {message.type === 'order_accepted' && (
+          <View style={styles.order} accessibilityLabel={`Número de pedido ${message.orderId}`}>
+            <Text style={styles.orderLabel}>N.º DE PEDIDO</Text>
+            {/* selectable: se puede mantener pulsado para copiar el UUID */}
+            <Text style={styles.orderId} selectable>
+              {message.orderId}
+            </Text>
+          </View>
+        )}
         <Text style={[styles.time, own && !isConfirmation && styles.timeOwn]}>
           {formatTime(message.createdAt)}
         </Text>
@@ -70,6 +79,22 @@ const styles = StyleSheet.create({
   text: { fontSize: 15, lineHeight: 20, color: colors.text },
   textOwn: { color: colors.onAccent },
   textConfirmation: { color: colors.successText },
+  order: {
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+    backgroundColor: colors.surface,
+    gap: 2,
+  },
+  orderLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.6, color: colors.successText },
+  orderId: {
+    fontSize: 12,
+    color: colors.text,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
+  },
   time: { alignSelf: 'flex-end', fontSize: 11, marginTop: 2, color: colors.textMuted },
   timeOwn: { color: colors.onAccentMuted },
 });

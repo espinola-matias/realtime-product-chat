@@ -83,6 +83,36 @@
   opacity: 0.85;
 }
 
+/* N.º de pedido dentro de la confirmación */
+.bubble__order {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: rgb(0 0 0 / 0.28);
+  border: 1px solid var(--success-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bubble__order-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--success-text);
+  opacity: 0.85;
+}
+
+.bubble__order-id {
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 @keyframes bubble-in {
   from {
     opacity: 0;

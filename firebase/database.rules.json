@@ -35,7 +35,7 @@
                 ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200 && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
               },
               "price": {
-                ".validate": "newData.isNumber() && newData.val() > 0 && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
+                ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 9999999999 && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
               },
               "currency": {
                 ".validate": "newData.isString() && newData.val().matches(/^[A-Z][A-Z][A-Z]$/) && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"

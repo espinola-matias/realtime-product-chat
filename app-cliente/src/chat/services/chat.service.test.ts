@@ -320,7 +320,7 @@ describe('approveOffer', () => {
       type: 'order_accepted',
       orderId: 'order-uuid-1',
       offerMessageId: '-Omsg1',
-      text: expect.stringContaining('Bandeja paisa'),
+      text: '✅ Pedido confirmado: Bandeja paisa · COL$ 32.000',
       createdAt: expect.any(Number),
     });
     const fetchOrder = fetchMock.mock.invocationCallOrder[0];

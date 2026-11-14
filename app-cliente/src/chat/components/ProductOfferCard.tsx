@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { OfferStatus, ProductOfferMessage } from '../interfaces/chat-message.interface';
+import { formatPrice } from '../services/currency';
 import { colors } from './theme';
 
 interface ProductOfferCardProps {
@@ -24,19 +25,6 @@ const badgeStyle: Record<OfferStatus, { bg: string; fg: string }> = {
   accepted: { bg: colors.successSoft, fg: colors.successText },
   rejected: { bg: colors.dangerSoft, fg: colors.dangerText },
 };
-
-function formatPrice(price: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  } catch {
-    return `${currency} ${price}`;
-  }
-}
 
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp);
@@ -94,7 +82,7 @@ export function ProductOfferCard({ message, onAccept, onReject, answering = fals
         </View>
 
         {status === 'accepted' && message.orderId && (
-          <Text style={styles.note}>Pedido {message.orderId}</Text>
+          <Text style={styles.note} selectable>N.º de pedido {message.orderId}</Text>
         )}
 
         {showActions && (
