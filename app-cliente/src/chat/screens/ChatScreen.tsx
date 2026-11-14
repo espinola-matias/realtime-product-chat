@@ -41,6 +41,9 @@ interface ChatScreenProps {
 
 type Banner = { kind: 'error' | 'info'; text: string } | null;
 
+/** Tiempo que un aviso queda visible antes de cerrarse solo (igual que en el comercio). */
+const BANNER_DURATION_MS = 5000;
+
 const errorText = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
@@ -77,6 +80,13 @@ export function ChatScreen({ chatId, apiUrl }: ChatScreenProps) {
   }, [chatId]);
 
   useEffect(() => listenConnection(setConnected), []);
+
+  // Cada aviso nuevo se cierra solo a los 5 s (también se puede cerrar antes con la ×).
+  useEffect(() => {
+    if (!banner) return;
+    const timer = setTimeout(() => setBanner(null), BANNER_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [banner]);
 
   // La lista va invertida para quedar pegada abajo: el más nuevo primero.
   const listData = useMemo(() => [...messages].reverse(), [messages]);

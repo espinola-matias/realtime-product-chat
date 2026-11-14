@@ -174,5 +174,46 @@
     },
     "status": "created",
     "createdAt": 1794686435077
+  },
+  {
+    "id": "8f1d47dc-a987-442c-9d0d-051a4bd2e9e4",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QihRULLqbuZ_ZRyU5",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794687909758
+  },
+  {
+    "id": "56418f9b-eeed-4962-9196-1daf786d78bb",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QieZJhxUXkmqtTKGH",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794687941202
+  },
+  {
+    "id": "b152bac5-d69a-4f69-a008-fe02f3911a0a",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QjgiIP5z7fJI8DLsP",
+    "product": {
+      "id": "p-102",
+      "name": "Chipa (docena)",
+      "price": 15000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794688084561
   }
 ]
