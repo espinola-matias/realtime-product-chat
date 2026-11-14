@@ -10,8 +10,9 @@ Prueba técnica: chat en tiempo real entre un **cliente móvil** (React Native /
 ├── api/            NestJS — POST /orders, GET /orders/:id
 ├── app-cliente/    React Native (Expo) — cliente móvil
 ├── app-comercio/   React + Vite — comercio web
-└── firebase/
-    └── database.rules.json   reglas de Realtime Database usadas
+├── firebase/
+│   └── database.rules.json   reglas de Realtime Database usadas
+└── firebase.json             apunta a las reglas (para desplegarlas con Firebase CLI, opcional)
 ```
 
 Cada pieza sigue el patrón `src/[entidad]/[componentes]`.
@@ -29,6 +30,38 @@ Cada pieza sigue el patrón `src/[entidad]/[componentes]`.
 3. En la pestaña **Reglas**, pegue el contenido de [`firebase/database.rules.json`](firebase/database.rules.json) y publique.
 4. **Configuración del proyecto → Tus apps → Web (`</>`)**: registre una app web y copie `apiKey`, `authDomain`, `databaseURL`, `projectId` y `appId`.
 5. Esos valores van en los `.env` de `app-comercio` y `app-cliente` (ver abajo). No se suben al repositorio.
+
+> Alternativa al paso 3 (opcional): `npx firebase-tools login` y `npx firebase-tools deploy --only database --project <id-del-proyecto>` desde la raíz del repo.
+
+### Reglas de Realtime Database
+
+[`firebase/database.rules.json`](firebase/database.rules.json) protege la estructura y el ciclo de vida de los mensajes en `/chats/{chatId}/messages/{messageId}`:
+
+| Regla | Qué impide |
+| ----- | ---------- |
+| Solo se puede leer/escribir bajo `chats/{chatId}/messages`; `chatId` con letras, números, `-` o `_` (máx. 64) | Escribir en cualquier otra ruta de la base |
+| Campos obligatorios `sender`, `type`, `createdAt`; `sender` ∈ {`cliente`, `comercio`}; `type` ∈ {`text`, `product_offer`, `order_accepted`}; campos desconocidos rechazados | Mensajes mal formados o con datos extra (p. ej. guardar `id` dentro del nodo) |
+| `sender`, `type` y `createdAt` no cambian después de creados; `createdAt` no puede estar en el futuro (> 5 min) | Reescribir la autoría o la fecha de un mensaje |
+| `text`: 1–1000 caracteres | Mensajes vacíos o gigantes |
+| Los mensajes `text` y `order_accepted` no se pueden editar ni borrar | Alterar el historial |
+| `product_offer` solo con `sender: comercio`, nace con `status: pending` y con `product` válido (`id`, `name`, `price > 0`, `currency` de 3 letras mayúsculas, `imageUrl` http/https opcional) | Ofertas del cliente, ofertas ya aceptadas, precios ≤ 0 |
+| Una oferta solo se modifica mientras está `pending`: puede pasar **una vez** a `accepted` (exige `orderId`) o `rejected`; el comercio puede corregir el producto o borrarla (cancelar) | Responder dos veces, “desaceptar”, cambiar el producto de una oferta ya respondida |
+| `order_accepted` solo con `sender: cliente` y referenciando una oferta `accepted` con el mismo `orderId` | Confirmaciones falsas |
+
+**Limitación conocida:** la prueba no usa Firebase Authentication, así que las reglas validan *qué* se escribe pero no *quién* lo escribe: cualquiera con la configuración web podría escribir como `cliente` o `comercio` respetando estas reglas. Mejora futura: Firebase Auth (anónimo o con cuenta) guardando el `uid` de cada parte en `chats/{chatId}/members` y exigiendo `auth.uid` en las reglas.
+
+**Probar las reglas** en la consola (Realtime Database → Reglas → *Área de prueba de reglas*, sin autenticación), ubicación `/chats/chat-demo-001/messages/prueba1`, tipo *set*:
+
+| Datos | Resultado esperado |
+| ----- | ------------------ |
+| `{"sender":"cliente","type":"text","text":"Hola","createdAt":1731023940000}` | Permitido |
+| `{"sender":"cliente","type":"product_offer","status":"pending","product":{"id":"p-101","name":"Bandeja paisa","price":32000,"currency":"COP"},"createdAt":1731024000000}` | Denegado (oferta del cliente) |
+| igual pero `"sender":"comercio"` y `"price":0` | Denegado (precio) |
+| igual pero `"sender":"comercio"` y `"status":"accepted"` | Denegado (debe nacer pending) |
+| igual pero `"sender":"comercio"` | Permitido |
+| `{"sender":"cliente","type":"text","text":"Hola","createdAt":1731023940000,"id":"x"}` | Denegado (campo extra) |
+
+Para las transiciones use la ruta de una oferta real del chat: *update* con `{"status":"accepted"}` sobre una oferta `pending` → denegado (falta `orderId`); `{"status":"accepted","orderId":"abc"}` → permitido; cualquier *update* sobre una oferta ya `accepted`/`rejected` → denegado; *set* `null` sobre un mensaje `text` → denegado.
 
 ## Variables de entorno
 

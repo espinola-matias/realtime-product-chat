@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Product } from '../interfaces/chat-message.interface';
 import {
   cancelOffer,
+  listenConnection,
   listenMessages,
   OfferNotEditableError,
   parseMessage,
@@ -291,5 +292,56 @@ describe('cancelOffer', () => {
     mockServerValue(text);
 
     await expect(cancelOffer(CHAT_ID, '-Omsg0')).rejects.toBeInstanceOf(OfferNotEditableError);
+  });
+});
+
+/* ───────────────────────── Cobertura adicional (E6) ───────────────────────── */
+
+describe('parseMessage · order_accepted', () => {
+  const confirmation = {
+    sender: 'cliente',
+    type: 'order_accepted',
+    orderId: 'order-uuid-1',
+    offerMessageId: '-Omsg1',
+    text: '✅ Pedido confirmado: Bandeja paisa',
+    createdAt: 4000,
+  };
+
+  it('lee la confirmación del pedido', () => {
+    expect(parseMessage('-Oconf', confirmation)).toEqual({ id: '-Oconf', ...confirmation });
+  });
+
+  it('descarta una confirmación enviada por el comercio', () => {
+    expect(parseMessage('-Oconf', { ...confirmation, sender: 'comercio' })).toBeNull();
+  });
+
+  it('descarta una confirmación sin orderId', () => {
+    const { orderId: _omit, ...withoutOrder } = confirmation;
+    expect(parseMessage('-Oconf', withoutOrder)).toBeNull();
+  });
+
+  it('conserva orderId y answeredAt de una oferta aceptada', () => {
+    const accepted = { ...offerNode, status: 'accepted', orderId: 'order-uuid-1', answeredAt: 5000 };
+    expect(parseMessage('-Omsg1', accepted)).toEqual({ id: '-Omsg1', ...accepted });
+  });
+});
+
+describe('listenConnection', () => {
+  it('escucha .info/connected y entrega un booleano', () => {
+    onValueMock.mockImplementation(((
+      _ref: DatabaseReference,
+      callback: (snapshot: DataSnapshot) => void,
+    ) => {
+      callback({ val: () => true } as unknown as DataSnapshot);
+      callback({ val: () => null } as unknown as DataSnapshot);
+      return () => undefined;
+    }) as unknown as typeof onValue);
+
+    const onChange = vi.fn();
+    listenConnection(onChange);
+
+    expect(refMock).toHaveBeenCalledWith(expect.anything(), '.info/connected');
+    expect(onChange).toHaveBeenNthCalledWith(1, true);
+    expect(onChange).toHaveBeenNthCalledWith(2, false);
   });
 });

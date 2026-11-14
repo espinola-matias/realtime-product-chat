@@ -64,5 +64,61 @@
     },
     "status": "created",
     "createdAt": 1794676802964
+  },
+  {
+    "id": "03ab8d2b-57f6-4075-916a-7aa05bf2fe27",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q7xJrRkV0HEZmG0pp",
+    "product": {
+      "id": "p-103",
+      "name": "Limonada de coco",
+      "price": 9500,
+      "currency": "COP",
+      "imageUrl": "https://www.laylita.com/recetas/el-coco-usos-en-la-cocina-y-recetas/"
+    },
+    "status": "created",
+    "createdAt": 1794677969314
+  },
+  {
+    "id": "53dbc5a7-90db-4d5c-8b29-54bab40cd9b1",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q7ojAfYNF9h5VtN-D",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794677975609
+  },
+  {
+    "id": "729484cc-6467-4643-b05c-eb4adafc86b0",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q8DHHGAS8LU74Lkd6",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794678005675
+  },
+  {
+    "id": "e5d64bf9-dff4-45b2-9ca1-a8ffb48a1f6a",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q8FKf0GDhjWJLAyOa",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 9999,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794678007801
   }
 ]

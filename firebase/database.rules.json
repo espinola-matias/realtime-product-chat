@@ -4,10 +4,62 @@
     ".write": false,
     "chats": {
       "$chatId": {
+        ".validate": "$chatId.length <= 64 && $chatId.matches(/^[A-Za-z0-9_-]+$/)",
         "messages": {
           ".read": true,
-          ".write": true,
-          ".indexOn": ["createdAt"]
+          ".indexOn": ["createdAt"],
+          "$messageId": {
+            ".write": "(!data.exists() && newData.exists()) || (!data.exists() && !newData.exists()) || (data.exists() && data.child('type').val() === 'product_offer' && data.child('status').val() === 'pending')",
+            ".validate": "newData.hasChildren(['sender', 'type', 'createdAt']) && ((newData.child('type').val() === 'text' && newData.hasChild('text')) || (newData.child('type').val() === 'product_offer' && newData.child('sender').val() === 'comercio' && newData.hasChildren(['status', 'product'])) || (newData.child('type').val() === 'order_accepted' && newData.child('sender').val() === 'cliente' && newData.hasChildren(['orderId', 'offerMessageId', 'text']) && root.child('chats/' + $chatId + '/messages/' + newData.child('offerMessageId').val() + '/orderId').val() === newData.child('orderId').val()))",
+            "sender": {
+              ".validate": "newData.isString() && (newData.val() === 'cliente' || newData.val() === 'comercio') && (!data.exists() || newData.val() === data.val())"
+            },
+            "type": {
+              ".validate": "newData.isString() && (newData.val() === 'text' || newData.val() === 'product_offer' || newData.val() === 'order_accepted') && (!data.exists() || newData.val() === data.val())"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && ((data.exists() && newData.val() === data.val()) || (!data.exists() && newData.val() <= now + 300000))"
+            },
+            "text": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1000 && newData.parent().child('type').val() !== 'product_offer'"
+            },
+            "status": {
+              ".validate": "newData.isString() && newData.parent().child('type').val() === 'product_offer' && ((!data.exists() && newData.val() === 'pending') || (data.val() === 'pending' && (newData.val() === 'pending' || newData.val() === 'rejected' || (newData.val() === 'accepted' && newData.parent().hasChild('orderId')))))"
+            },
+            "product": {
+              ".validate": "newData.parent().child('type').val() === 'product_offer' && newData.hasChildren(['id', 'name', 'price', 'currency'])",
+              "id": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
+              },
+              "name": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200 && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
+              },
+              "price": {
+                ".validate": "newData.isNumber() && newData.val() > 0 && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
+              },
+              "currency": {
+                ".validate": "newData.isString() && newData.val().matches(/^[A-Z][A-Z][A-Z]$/) && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
+              },
+              "imageUrl": {
+                ".validate": "newData.isString() && newData.val().length <= 2000 && (newData.val().beginsWith('https://') || newData.val().beginsWith('http://')) && (!data.exists() || newData.parent().parent().child('status').val() === 'pending' || newData.val() === data.val())"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "orderId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100 && (newData.parent().child('type').val() === 'order_accepted' || newData.parent().child('status').val() === 'accepted')"
+            },
+            "answeredAt": {
+              ".validate": "newData.isNumber() && newData.parent().child('type').val() === 'product_offer' && newData.parent().child('status').val() !== 'pending'"
+            },
+            "offerMessageId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64 && newData.parent().child('type').val() === 'order_accepted' && root.child('chats/' + $chatId + '/messages/' + newData.val() + '/status').val() === 'accepted'"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
         }
       }
     }

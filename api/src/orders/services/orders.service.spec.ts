@@ -205,5 +205,14 @@ describe('OrdersService', () => {
 
       await expect(createService()).rejects.toThrow('arreglo de pedidos');
     });
+
+    it('falla al arrancar con un mensaje claro si no puede leer el archivo', async () => {
+      const denied: NodeJS.ErrnoException = new Error('permiso denegado');
+      denied.code = 'EACCES';
+      readFileMock.mockRejectedValue(denied);
+
+      await expect(createService()).rejects.toThrow('No se pudo leer');
+      await expect(createService()).rejects.toThrow('permiso denegado');
+    });
   });
 });
