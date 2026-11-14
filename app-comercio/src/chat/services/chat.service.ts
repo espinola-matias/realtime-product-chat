@@ -3,6 +3,7 @@ import {
   push,
   ref,
   runTransaction,
+  set,
   type DataSnapshot,
   type Unsubscribe,
 } from 'firebase/database';
@@ -127,9 +128,17 @@ export function parseMessages(value: unknown): ChatMessage[] {
 
 /* ───────────────────────────── Operaciones del chat ───────────────────────────── */
 
+/**
+ * Escribe un mensaje nuevo con la misma forma que el ejemplo del enunciado:
+ * el `id` va también DENTRO del nodo y es igual a su key de Firebase.
+ * `push()` sin valor solo genera la key (en local, sin red); luego `set()` escribe todo junto.
+ */
 async function pushMessage(chatId: string, message: ChatMessageData): Promise<string> {
-  const key = (await push(ref(getDb(), messagesPath(chatId)), message)).key;
-  if (!key) throw new Error('Firebase no devolvió el id del mensaje');
+  const newRef = push(ref(getDb(), messagesPath(chatId)));
+  const key = newRef.key;
+  if (!key) throw new Error('Firebase no generó el id del mensaje');
+  const stored: ChatMessage = { ...message, id: key };
+  await set(newRef, stored);
   return key;
 }
 

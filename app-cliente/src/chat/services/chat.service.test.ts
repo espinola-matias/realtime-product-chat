@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { DataSnapshot, DatabaseReference, TransactionResult } from 'firebase/database';
-import { get, onValue, push, ref, runTransaction } from 'firebase/database';
+import { get, onValue, push, ref, runTransaction, set } from 'firebase/database';
 import {
   ApiError,
   answerOffer,
@@ -18,6 +18,7 @@ import {
 jest.mock('firebase/database', () => ({
   ref: jest.fn((_db: unknown, path: string) => ({ path })),
   push: jest.fn(),
+  set: jest.fn(),
   onValue: jest.fn(),
   get: jest.fn(),
   runTransaction: jest.fn(),
@@ -27,13 +28,21 @@ jest.mock('../config/firebase', () => ({
   getDb: jest.fn(() => ({ fake: 'db' })),
 }));
 
+const CHAT_ID = 'chat-demo-001';
+
 const pushMock = jest.mocked(push);
+const setMock = jest.mocked(set);
+
+/** push() sin valor genera la key en local; set() escribe el mensaje con su id. */
+function mockNewKey(key: string): void {
+  pushMock.mockReturnValue({ key, path: `chats/${CHAT_ID}/messages/${key}` } as unknown as ReturnType<typeof push>);
+  setMock.mockResolvedValue(undefined);
+}
 const onValueMock = jest.mocked(onValue);
 const refMock = jest.mocked(ref);
 const getMock = jest.mocked(get);
 const runTransactionMock = jest.mocked(runTransaction);
 
-const CHAT_ID = 'chat-demo-001';
 
 const offerNode = {
   sender: 'comercio',
@@ -95,16 +104,21 @@ describe('parseMessages', () => {
 
 describe('sendTextMessage', () => {
   it('hace push en /chats/{chatId}/messages con el texto limpio', async () => {
-    pushMock.mockResolvedValue({ key: '-Onuevo' } as unknown as ReturnType<typeof push>);
+    mockNewKey('-Onuevo');
 
     const id = await sendTextMessage(CHAT_ID, 'cliente', '  Hola  ');
 
     expect(id).toBe('-Onuevo');
     expect(refMock).toHaveBeenCalledWith(expect.anything(), `chats/${CHAT_ID}/messages`);
-    expect(pushMock).toHaveBeenCalledWith(
-      expect.objectContaining({ path: `chats/${CHAT_ID}/messages` }),
-      { sender: 'cliente', type: 'text', text: 'Hola', createdAt: expect.any(Number) },
-    );
+    // push() solo genera la key; set() guarda el mensaje con su id dentro (igual al enunciado).
+    expect(pushMock).toHaveBeenCalledWith(expect.objectContaining({ path: `chats/${CHAT_ID}/messages` }));
+    expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ key: '-Onuevo' }), {
+      id: '-Onuevo',
+      sender: 'cliente',
+      type: 'text',
+      text: 'Hola',
+      createdAt: expect.any(Number),
+    });
   });
 
   it('rechaza mensajes vacíos sin tocar Firebase', async () => {
@@ -113,7 +127,7 @@ describe('sendTextMessage', () => {
   });
 
   it('envuelve el error de Firebase con un mensaje claro', async () => {
-    pushMock.mockRejectedValue(new Error('PERMISSION_DENIED'));
+    setMock.mockRejectedValue(new Error('PERMISSION_DENIED'));
 
     await expect(sendTextMessage(CHAT_ID, 'cliente', 'Hola')).rejects.toThrow(
       'No se pudo enviar el mensaje: PERMISSION_DENIED',
@@ -207,7 +221,7 @@ const fetchMock = jest.fn<typeof fetch>();
 
 beforeEach(() => {
   globalThis.fetch = fetchMock as unknown as typeof fetch;
-  pushMock.mockResolvedValue({ key: '-Oconfirm' } as unknown as Awaited<ReturnType<typeof push>>);
+  mockNewKey('-Oconfirm');
 });
 
 describe('answerOffer', () => {
@@ -315,7 +329,8 @@ describe('approveOffer', () => {
 
     expect(result).toEqual({ orderId: 'order-uuid-1', recovered: false });
     expect(server.written()).toMatchObject({ status: 'accepted', orderId: 'order-uuid-1' });
-    expect(pushMock).toHaveBeenCalledWith(expect.anything(), {
+    expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ key: '-Oconfirm' }), {
+      id: '-Oconfirm',
       sender: 'cliente',
       type: 'order_accepted',
       orderId: 'order-uuid-1',
@@ -363,7 +378,7 @@ describe('approveOffer', () => {
     mockGet(offerNode);
     fetchMock.mockResolvedValue(jsonResponse(201, createdOrder));
     mockServerValue(offerNode);
-    pushMock.mockRejectedValue(new Error('offline'));
+    setMock.mockRejectedValue(new Error('offline'));
 
     const result = await approveOffer(API, CHAT_ID, '-Omsg1');
 
@@ -431,5 +446,43 @@ describe('listenConnection', () => {
     expect(refMock).toHaveBeenCalledWith(expect.anything(), '.info/connected');
     expect(onChange).toHaveBeenNthCalledWith(1, true);
     expect(onChange).toHaveBeenNthCalledWith(2, false);
+  });
+});
+
+/* ─────────────── Forma exacta del enunciado (id dentro del nodo) ─────────────── */
+
+describe('forma del enunciado con id', () => {
+  it('lee el texto del ejemplo del PDF tal cual (con id dentro)', () => {
+    const pdfText = {
+      id: '-Omsg0',
+      sender: 'cliente',
+      type: 'text',
+      text: 'Hola, ¿sigue disponible?',
+      createdAt: 1731023940000,
+    };
+    expect(parseMessage('-Omsg0', pdfText)).toEqual(pdfText);
+  });
+
+  it('lee la oferta del ejemplo del PDF tal cual (con id dentro)', () => {
+    const pdfOffer = {
+      id: '-Omsg1',
+      sender: 'comercio',
+      type: 'product_offer',
+      status: 'pending',
+      product: {
+        id: 'p-101',
+        name: 'Bandeja paisa',
+        price: 32000,
+        currency: 'COP',
+        imageUrl: 'https://ejemplo.com/bandeja.jpg',
+      },
+      createdAt: 1731024000000,
+    };
+    expect(parseMessage('-Omsg1', pdfOffer)).toEqual(pdfOffer);
+  });
+
+  it('el id siempre es la key de Firebase (si el nodo trae otro, manda la key)', () => {
+    const node = { id: '-Otro', sender: 'cliente', type: 'text', text: 'x', createdAt: 1 };
+    expect(parseMessage('-Okey', node)?.id).toBe('-Okey');
   });
 });

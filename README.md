@@ -40,7 +40,8 @@ Cada pieza sigue el patrón `src/[entidad]/[componentes]`.
 | Regla | Qué impide |
 | ----- | ---------- |
 | Solo se puede leer/escribir bajo `chats/{chatId}/messages`; `chatId` con letras, números, `-` o `_` (máx. 64) | Escribir en cualquier otra ruta de la base |
-| Campos obligatorios `sender`, `type`, `createdAt`; `sender` ∈ {`cliente`, `comercio`}; `type` ∈ {`text`, `product_offer`, `order_accepted`}; campos desconocidos rechazados | Mensajes mal formados o con datos extra (p. ej. guardar `id` dentro del nodo) |
+| Campos obligatorios `sender`, `type`, `createdAt`; `sender` ∈ {`cliente`, `comercio`}; `type` ∈ {`text`, `product_offer`, `order_accepted`}; campos desconocidos rechazados | Mensajes mal formados o con datos extra |
+| `id` dentro del mensaje (como en el ejemplo del enunciado): debe ser igual a la key del nodo y no cambia | Mensajes con un `id` que no corresponde a su ubicación |
 | `sender`, `type` y `createdAt` no cambian después de creados; `createdAt` no puede estar en el futuro (> 5 min) | Reescribir la autoría o la fecha de un mensaje |
 | `text`: 1–1000 caracteres | Mensajes vacíos o gigantes |
 | Los mensajes `text` y `order_accepted` no se pueden editar ni borrar | Alterar el historial |
@@ -59,7 +60,9 @@ Cada pieza sigue el patrón `src/[entidad]/[componentes]`.
 | igual pero `"sender":"comercio"` y `"price":0` | Denegado (precio) |
 | igual pero `"sender":"comercio"` y `"status":"accepted"` | Denegado (debe nacer pending) |
 | igual pero `"sender":"comercio"` | Permitido |
-| `{"sender":"cliente","type":"text","text":"Hola","createdAt":1731023940000,"id":"x"}` | Denegado (campo extra) |
+| `{"id":"prueba1","sender":"cliente","type":"text","text":"Hola","createdAt":1731023940000}` | Permitido (id = key, forma del enunciado) |
+| `{"id":"x","sender":"cliente","type":"text","text":"Hola","createdAt":1731023940000}` | Denegado (id distinto de la key) |
+| `{"sender":"cliente","type":"text","text":"Hola","createdAt":1731023940000,"extra":true}` | Denegado (campo extra) |
 
 Para las transiciones use la ruta de una oferta real del chat: *update* con `{"status":"accepted"}` sobre una oferta `pending` → denegado (falta `orderId`); `{"status":"accepted","orderId":"abc"}` → permitido; cualquier *update* sobre una oferta ya `accepted`/`rejected` → denegado; *set* `null` sobre un mensaje `text` → denegado.
 

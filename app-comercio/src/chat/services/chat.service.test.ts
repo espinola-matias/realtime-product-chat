@@ -1,5 +1,5 @@
 import type { DataSnapshot, DatabaseReference, TransactionResult } from 'firebase/database';
-import { onValue, push, ref, runTransaction } from 'firebase/database';
+import { onValue, push, ref, runTransaction, set } from 'firebase/database';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Product } from '../interfaces/chat-message.interface';
 import {
@@ -18,6 +18,7 @@ import {
 vi.mock('firebase/database', () => ({
   ref: vi.fn((_db: unknown, path: string) => ({ path })),
   push: vi.fn(),
+  set: vi.fn(),
   onValue: vi.fn(),
   runTransaction: vi.fn(),
 }));
@@ -26,7 +27,16 @@ vi.mock('../config/firebase', () => ({
   getDb: vi.fn(() => ({ fake: 'db' })),
 }));
 
+const CHAT_ID = 'chat-demo-001';
+
 const pushMock = vi.mocked(push);
+const setMock = vi.mocked(set);
+
+/** push() sin valor genera la key en local; set() escribe el mensaje con su id. */
+function mockNewKey(key: string): void {
+  pushMock.mockReturnValue({ key, path: `chats/${CHAT_ID}/messages/${key}` } as unknown as ReturnType<typeof push>);
+  setMock.mockResolvedValue(undefined);
+}
 const onValueMock = vi.mocked(onValue);
 const refMock = vi.mocked(ref);
 const runTransactionMock = vi.mocked(runTransaction);
@@ -53,7 +63,6 @@ function mockServerValue(serverValue: unknown): { written: () => unknown } {
   return { written: () => written };
 }
 
-const CHAT_ID = 'chat-demo-001';
 
 const offerNode = {
   sender: 'comercio',
@@ -115,16 +124,22 @@ describe('parseMessages', () => {
 
 describe('sendTextMessage', () => {
   it('hace push en /chats/{chatId}/messages con el texto limpio', async () => {
-    pushMock.mockResolvedValue({ key: '-Onuevo' } as unknown as ReturnType<typeof push>);
+    mockNewKey('-Onuevo');
 
     const id = await sendTextMessage(CHAT_ID, 'comercio', '  Hola  ');
 
     expect(id).toBe('-Onuevo');
     expect(refMock).toHaveBeenCalledWith(expect.anything(), `chats/${CHAT_ID}/messages`);
-    expect(pushMock).toHaveBeenCalledWith(
-      { path: `chats/${CHAT_ID}/messages` },
-      { sender: 'comercio', type: 'text', text: 'Hola', createdAt: expect.any(Number) },
-    );
+    // push() solo genera la key en /chats/{chatId}/messages…
+    expect(pushMock).toHaveBeenCalledWith({ path: `chats/${CHAT_ID}/messages` });
+    // …y set() guarda el mensaje con su id dentro (igual que el ejemplo del enunciado).
+    expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ key: '-Onuevo' }), {
+      id: '-Onuevo',
+      sender: 'comercio',
+      type: 'text',
+      text: 'Hola',
+      createdAt: expect.any(Number),
+    });
   });
 
   it('rechaza mensajes vacíos sin tocar Firebase', async () => {
@@ -133,7 +148,7 @@ describe('sendTextMessage', () => {
   });
 
   it('envuelve el error de Firebase con un mensaje claro', async () => {
-    pushMock.mockRejectedValue(new Error('PERMISSION_DENIED'));
+    setMock.mockRejectedValue(new Error('PERMISSION_DENIED'));
 
     await expect(sendTextMessage(CHAT_ID, 'comercio', 'Hola')).rejects.toThrow(
       'No se pudo enviar el mensaje: PERMISSION_DENIED',
@@ -210,21 +225,20 @@ describe('validateProduct', () => {
 
 describe('sendProductOffer', () => {
   it('envía type product_offer, sender comercio y status pending', async () => {
-    pushMock.mockResolvedValue({ key: '-Ooferta' } as unknown as ReturnType<typeof push>);
+    mockNewKey('-Ooferta');
 
     const id = await sendProductOffer(CHAT_ID, { ...product, name: '  Bandeja paisa ' });
 
     expect(id).toBe('-Ooferta');
-    expect(pushMock).toHaveBeenCalledWith(
-      { path: `chats/${CHAT_ID}/messages` },
-      {
-        sender: 'comercio',
-        type: 'product_offer',
-        status: 'pending',
-        product,
-        createdAt: expect.any(Number),
-      },
-    );
+    expect(pushMock).toHaveBeenCalledWith({ path: `chats/${CHAT_ID}/messages` });
+    expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ key: '-Ooferta' }), {
+      id: '-Ooferta',
+      sender: 'comercio',
+      type: 'product_offer',
+      status: 'pending',
+      product,
+      createdAt: expect.any(Number),
+    });
   });
 
   it('no escribe en Firebase si el producto es inválido', async () => {
@@ -235,11 +249,11 @@ describe('sendProductOffer', () => {
   });
 
   it('omite imageUrl vacía', async () => {
-    pushMock.mockResolvedValue({ key: '-Ox' } as unknown as ReturnType<typeof push>);
+    mockNewKey('-Ox');
 
     await sendProductOffer(CHAT_ID, { ...product, imageUrl: '   ' });
 
-    const [, data] = pushMock.mock.calls[0];
+    const [, data] = setMock.mock.calls[0];
     expect(data).toMatchObject({ product: { id: 'p-101' } });
     expect((data as { product: Product }).product).not.toHaveProperty('imageUrl');
   });
@@ -347,5 +361,43 @@ describe('listenConnection', () => {
     expect(refMock).toHaveBeenCalledWith(expect.anything(), '.info/connected');
     expect(onChange).toHaveBeenNthCalledWith(1, true);
     expect(onChange).toHaveBeenNthCalledWith(2, false);
+  });
+});
+
+/* ─────────────── Forma exacta del enunciado (id dentro del nodo) ─────────────── */
+
+describe('forma del enunciado con id', () => {
+  it('lee el texto del ejemplo del PDF tal cual (con id dentro)', () => {
+    const pdfText = {
+      id: '-Omsg0',
+      sender: 'cliente',
+      type: 'text',
+      text: 'Hola, ¿sigue disponible?',
+      createdAt: 1731023940000,
+    };
+    expect(parseMessage('-Omsg0', pdfText)).toEqual(pdfText);
+  });
+
+  it('lee la oferta del ejemplo del PDF tal cual (con id dentro)', () => {
+    const pdfOffer = {
+      id: '-Omsg1',
+      sender: 'comercio',
+      type: 'product_offer',
+      status: 'pending',
+      product: {
+        id: 'p-101',
+        name: 'Bandeja paisa',
+        price: 32000,
+        currency: 'COP',
+        imageUrl: 'https://ejemplo.com/bandeja.jpg',
+      },
+      createdAt: 1731024000000,
+    };
+    expect(parseMessage('-Omsg1', pdfOffer)).toEqual(pdfOffer);
+  });
+
+  it('el id siempre es la key de Firebase (si el nodo trae otro, manda la key)', () => {
+    const node = { id: '-Otro', sender: 'cliente', type: 'text', text: 'x', createdAt: 1 };
+    expect(parseMessage('-Okey', node)?.id).toBe('-Okey');
   });
 });

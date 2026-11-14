@@ -36,9 +36,9 @@ interface FormState {
 
 /** Productos de ejemplo para la demo (rellenan el formulario con un clic). */
 const PRESETS: readonly Product[] = [
-  { id: 'p-101', name: 'Bandeja paisa', price: 32000, currency: 'COP', imageUrl: 'https://ejemplo.com/bandeja.jpg' },
-  { id: 'p-102', name: 'Chipa (docena)', price: 15000, currency: 'PYG' },
-  { id: 'p-103', name: 'Limonada de coco', price: 4.5, currency: 'USD' },
+  { id: 'p-101', name: 'Chipa tradicional (docena)', price: 36000, currency: 'PYG' }, // Gs 36.000
+  { id: 'p-102', name: 'Pão de queijo', price: 6, currency: 'BRL' }, // R$ 6,00
+  { id: 'p-103', name: 'Donas glaseadas (docena)', price: 12, currency: 'USD' }, // US$ 12,00
 ];
 
 const EMPTY: FormState = { id: '', name: '', price: '', currency: DEFAULT_CURRENCY, imageUrl: '' };
@@ -181,7 +181,7 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
             id={`${fieldId}-name`}
             value={form.name}
             onChange={(e) => update('name')(e.target.value)}
-            placeholder="Bandeja paisa"
+            placeholder="Chipa tradicional (docena)"
             maxLength={200}
             required
           />

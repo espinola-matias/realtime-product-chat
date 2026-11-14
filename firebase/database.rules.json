@@ -11,6 +11,9 @@
           "$messageId": {
             ".write": "(!data.exists() && newData.exists()) || (!data.exists() && !newData.exists()) || (data.exists() && data.child('type').val() === 'product_offer' && data.child('status').val() === 'pending')",
             ".validate": "newData.hasChildren(['sender', 'type', 'createdAt']) && ((newData.child('type').val() === 'text' && newData.hasChild('text')) || (newData.child('type').val() === 'product_offer' && newData.child('sender').val() === 'comercio' && newData.hasChildren(['status', 'product'])) || (newData.child('type').val() === 'order_accepted' && newData.child('sender').val() === 'cliente' && newData.hasChildren(['orderId', 'offerMessageId', 'text']) && root.child('chats/' + $chatId + '/messages/' + newData.child('offerMessageId').val() + '/orderId').val() === newData.child('orderId').val()))",
+            "id": {
+              ".validate": "newData.isString() && newData.val() === $messageId && (!data.exists() || newData.val() === data.val())"
+            },
             "sender": {
               ".validate": "newData.isString() && (newData.val() === 'cliente' || newData.val() === 'comercio') && (!data.exists() || newData.val() === data.val())"
             },

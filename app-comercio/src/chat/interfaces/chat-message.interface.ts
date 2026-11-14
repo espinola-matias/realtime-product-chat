@@ -12,7 +12,7 @@ export interface Product {
 }
 
 interface BaseMessage {
-  /** Key generada por push(); no se guarda dentro del nodo, se agrega al leer. */
+  /** Key generada por push(). Se guarda también dentro del nodo (igual al ejemplo del enunciado); al leer manda la key. */
   id: string;
   sender: Sender;
   /** Date.now() al enviar. */
@@ -49,5 +49,5 @@ export type ChatMessageType = ChatMessage['type'];
 /** Omit distribuido: Omit<Unión, K> a secas colapsaría a las claves comunes. */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
-/** Lo que se escribe en Firebase (sin `id`). */
+/** Datos del mensaje antes de tener key (pushMessage agrega el `id` = key al escribir). */
 export type ChatMessageData = DistributiveOmit<ChatMessage, 'id'>;
