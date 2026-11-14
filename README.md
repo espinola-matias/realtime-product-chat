@@ -97,6 +97,7 @@ Chat entre un **cliente móvil** (React Native · Expo) y un **comercio web** (R
 
 Cada pieza tiene un `.env.example`. Cópielo a `.env` y complételo. Los `.env` no se suben al repositorio.
 
+
 **`api/.env`**
 
 | Variable      | Ejemplo           | Uso                                                                 |
@@ -118,6 +119,12 @@ Cada pieza tiene un `.env.example`. Cópielo a `.env` y complételo. Los `.env` 
 | —                             | `EXPO_PUBLIC_API_URL`                | URL de la API (ver tabla siguiente)     |
 
 `EXPO_PUBLIC_API_URL` según dónde corra el cliente:
+
+| Cliente                          | `EXPO_PUBLIC_API_URL`             |
+| -------------------------------- | --------------------------------- |
+| Navegador web / simulador iOS    | `http://localhost:3000`           |
+| Emulador Android                 | `http://10.0.2.2:3000`            |
+| Teléfono físico (Expo Go)        | `http://<IP-de-la-PC>:3000`       |
 
 Si falta una variable, cada app lo indica en pantalla con el nombre exacto de la variable.
 
