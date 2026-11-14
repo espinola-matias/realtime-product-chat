@@ -85,6 +85,18 @@ code {
   color: var(--accent-text);
 }
 
+.button--small {
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+.button--danger {
+  color: var(--danger-text);
+  border-color: var(--danger-soft);
+  background: var(--danger-soft);
+}
+
 .config-error {
   max-width: 560px;
   margin: 15vh auto;

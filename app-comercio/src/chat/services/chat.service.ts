@@ -2,6 +2,7 @@ import {
   onValue,
   push,
   ref,
+  runTransaction,
   type DataSnapshot,
   type Unsubscribe,
 } from 'firebase/database';
@@ -17,6 +18,16 @@ import type {
 export const MAX_TEXT_LENGTH = 1000;
 
 const messagesPath = (chatId: string): string => `chats/${chatId}/messages`;
+const messagePath = (chatId: string, messageId: string): string =>
+  `${messagesPath(chatId)}/${messageId}`;
+
+/** La oferta ya no está `pending` (el cliente respondió) o no existe. */
+export class OfferNotEditableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OfferNotEditableError';
+  }
+}
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -130,6 +141,122 @@ export async function sendTextMessage(
     return await pushMessage(chatId, { sender, type: 'text', text: clean, createdAt: Date.now() });
   } catch (error: unknown) {
     throw new Error(`No se pudo enviar el mensaje: ${describeError(error)}`, { cause: error });
+  }
+}
+
+/* ─────────────────────────────── Ofertas (comercio) ─────────────────────────────── */
+
+const CURRENCY_PATTERN = /^[A-Z]{3}$/;
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/** Valida un producto antes de ofertarlo. Devuelve la lista de errores (vacía si es válido). */
+export function validateProduct(product: Product): string[] {
+  const errors: string[] = [];
+  if (!product.id.trim()) errors.push('El id del producto es obligatorio');
+  if (!product.name.trim()) errors.push('El nombre del producto es obligatorio');
+  if (!Number.isFinite(product.price) || product.price <= 0) {
+    errors.push('El precio debe ser un número mayor que cero');
+  }
+  if (!CURRENCY_PATTERN.test(product.currency)) {
+    errors.push('La moneda debe ser un código de 3 letras en mayúscula (ej. COP)');
+  }
+  if (product.imageUrl !== undefined && !isHttpUrl(product.imageUrl)) {
+    errors.push('La URL de la imagen debe empezar por http:// o https://');
+  }
+  return errors;
+}
+
+/** Normaliza el producto (trim, sin imageUrl vacía) y lo valida; lanza si es inválido. */
+function cleanProduct(product: Product): Product {
+  const imageUrl = product.imageUrl?.trim();
+  const clean: Product = {
+    id: product.id.trim(),
+    name: product.name.trim(),
+    price: product.price,
+    currency: product.currency.trim().toUpperCase(),
+    ...(imageUrl ? { imageUrl } : {}),
+  };
+  const errors = validateProduct(clean);
+  if (errors.length > 0) throw new Error(errors.join('. '));
+  return clean;
+}
+
+/** Solo el comercio envía ofertas, en cualquier momento del chat. Devuelve el id del mensaje. */
+export async function sendProductOffer(chatId: string, product: Product): Promise<string> {
+  const clean = cleanProduct(product);
+  try {
+    return await pushMessage(chatId, {
+      sender: 'comercio',
+      type: 'product_offer',
+      status: 'pending',
+      product: clean,
+      createdAt: Date.now(),
+    });
+  } catch (error: unknown) {
+    throw new Error(`No se pudo enviar la oferta: ${describeError(error)}`, { cause: error });
+  }
+}
+
+const isPendingOffer = (value: unknown): value is UnknownRecord =>
+  isRecord(value) && value.type === 'product_offer' && value.status === 'pending';
+
+/**
+ * Corrige el producto de una oferta que sigue `pending`.
+ * Usa una transacción: si el cliente la respondió entretanto, no se toca.
+ */
+export async function updateOffer(
+  chatId: string,
+  messageId: string,
+  product: Product,
+): Promise<void> {
+  const clean = cleanProduct(product);
+
+  let result;
+  try {
+    result = await runTransaction(ref(getDb(), messagePath(chatId, messageId)), (current: unknown) => {
+      // null = caché local vacía: se devuelve tal cual para que Firebase reintente con el valor real.
+      if (current === null) return null;
+      if (!isPendingOffer(current)) return undefined; // aborta: ya respondida
+      return { ...current, product: clean };
+    });
+  } catch (error: unknown) {
+    throw new Error(`No se pudo corregir la oferta: ${describeError(error)}`, { cause: error });
+  }
+
+  if (!result.committed) {
+    throw new OfferNotEditableError('La oferta ya fue respondida por el cliente; no se puede corregir');
+  }
+  if (!result.snapshot.exists()) {
+    throw new OfferNotEditableError('La oferta ya no existe');
+  }
+}
+
+/**
+ * Cancela (borra) una oferta que sigue `pending`.
+ * El enunciado solo admite pending | accepted | rejected, así que cancelar = eliminar el mensaje.
+ */
+export async function cancelOffer(chatId: string, messageId: string): Promise<void> {
+  let result;
+  try {
+    result = await runTransaction(ref(getDb(), messagePath(chatId, messageId)), (current: unknown) => {
+      if (current === null) return null;
+      if (!isPendingOffer(current)) return undefined; // aborta: ya respondida
+      return null; // borra el nodo
+    });
+  } catch (error: unknown) {
+    throw new Error(`No se pudo cancelar la oferta: ${describeError(error)}`, { cause: error });
+  }
+
+  if (!result.committed) {
+    throw new OfferNotEditableError('La oferta ya fue respondida por el cliente; no se puede cancelar');
   }
 }
 

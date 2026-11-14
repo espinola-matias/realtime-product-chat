@@ -1,28 +1,41 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { MessageBubble } from '../components/MessageBubble';
-import type { ChatMessage, Sender } from '../interfaces/chat-message.interface';
+import { OfferForm } from '../components/OfferForm';
+import { ProductOfferCard } from '../components/ProductOfferCard';
+import type { ChatMessage, Product, ProductOfferMessage, Sender } from '../interfaces/chat-message.interface';
 import {
+  cancelOffer,
   listenConnection,
   listenMessages,
   MAX_TEXT_LENGTH,
+  sendProductOffer,
   sendTextMessage,
+  updateOffer,
 } from '../services/chat.service';
 import './ChatPage.css';
 
 const VIEWER: Sender = 'comercio';
 
+type OfferPanel = { mode: 'create' } | { mode: 'edit'; offer: ProductOfferMessage } | null;
+
 interface ChatPageProps {
   chatId: string;
 }
+
+const errorText = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
 
 export function ChatPage({ chatId }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const [listenError, setListenError] = useState<string | null>(null);
-  const [sendError, setSendError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [offerPanel, setOfferPanel] = useState<OfferPanel>(null);
+  const [busyOfferId, setBusyOfferId] = useState<string | null>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
 
   // Listener en tiempo real de los mensajes del chat.
@@ -49,17 +62,27 @@ export function ChatPage({ chatId }: ChatPageProps) {
     listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
 
+  // Si el cliente responde la oferta mientras el comercio la corrige, se cierra el formulario.
+  useEffect(() => {
+    if (offerPanel?.mode !== 'edit') return;
+    const current = messages.find((m) => m.id === offerPanel.offer.id);
+    if (!current || current.type !== 'product_offer' || current.status !== 'pending') {
+      setOfferPanel(null);
+      setNotice('La oferta que estaba corrigiendo ya fue respondida o eliminada.');
+    }
+  }, [messages, offerPanel]);
+
   async function handleSubmit(event?: FormEvent) {
     event?.preventDefault();
     if (!draft.trim() || sending) return;
 
     setSending(true);
-    setSendError(null);
+    setActionError(null);
     try {
       await sendTextMessage(chatId, VIEWER, draft);
       setDraft('');
     } catch (error: unknown) {
-      setSendError(error instanceof Error ? error.message : 'No se pudo enviar el mensaje');
+      setActionError(errorText(error, 'No se pudo enviar el mensaje'));
     } finally {
       setSending(false);
     }
@@ -71,6 +94,39 @@ export function ChatPage({ chatId }: ChatPageProps) {
       void handleSubmit();
     }
   }
+
+  async function handleOfferSubmit(product: Product) {
+    setNotice(null);
+    if (offerPanel?.mode === 'edit') {
+      await updateOffer(chatId, offerPanel.offer.id, product);
+      setNotice('Oferta corregida.');
+    } else {
+      await sendProductOffer(chatId, product);
+    }
+  }
+
+  function handleEdit(offer: ProductOfferMessage) {
+    setNotice(null);
+    setOfferPanel({ mode: 'edit', offer });
+  }
+
+  async function handleCancel(offer: ProductOfferMessage) {
+    if (!window.confirm(`¿Cancelar la oferta de "${offer.product.name}"? Se eliminará del chat.`)) return;
+
+    setBusyOfferId(offer.id);
+    setActionError(null);
+    setNotice(null);
+    try {
+      await cancelOffer(chatId, offer.id);
+      setNotice('Oferta cancelada.');
+    } catch (error: unknown) {
+      setActionError(errorText(error, 'No se pudo cancelar la oferta'));
+    } finally {
+      setBusyOfferId(null);
+    }
+  }
+
+  const panelKey = offerPanel?.mode === 'edit' ? offerPanel.offer.id : 'create';
 
   return (
     <div className="chat">
@@ -99,11 +155,14 @@ export function ChatPage({ chatId }: ChatPageProps) {
             case 'order_accepted':
               return <MessageBubble key={message.id} message={message} viewer={VIEWER} />;
             case 'product_offer':
-              // ProductOfferCard llega en la etapa E4.
               return (
-                <p key={message.id} className="chat__hint">
-                  Oferta: {message.product.name} ({message.status})
-                </p>
+                <ProductOfferCard
+                  key={message.id}
+                  message={message}
+                  onEdit={handleEdit}
+                  onCancel={(offer) => void handleCancel(offer)}
+                  busy={busyOfferId === message.id}
+                />
               );
           }
         })}
@@ -111,8 +170,30 @@ export function ChatPage({ chatId }: ChatPageProps) {
       </main>
 
       <footer className="chat__composer">
-        {sendError && <p className="chat__error" role="alert">{sendError}</p>}
+        {offerPanel && (
+          <OfferForm
+            key={panelKey}
+            mode={offerPanel.mode}
+            initialProduct={offerPanel.mode === 'edit' ? offerPanel.offer.product : undefined}
+            onSubmit={handleOfferSubmit}
+            onClose={() => setOfferPanel(null)}
+          />
+        )}
+        {actionError && <p className="chat__error" role="alert">{actionError}</p>}
+        {notice && <p className="chat__notice" role="status">{notice}</p>}
+
         <form className="composer" onSubmit={handleSubmit}>
+          <button
+            type="button"
+            className="button"
+            onClick={() => {
+              setNotice(null);
+              setOfferPanel(offerPanel?.mode === 'create' ? null : { mode: 'create' });
+            }}
+            aria-expanded={offerPanel?.mode === 'create'}
+          >
+            Enviar oferta
+          </button>
           <textarea
             className="composer__input"
             value={draft}
