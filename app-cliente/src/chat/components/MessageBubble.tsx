@@ -30,11 +30,7 @@ export function MessageBubble({ message, viewer }: MessageBubbleProps) {
           isConfirmation && styles.bubbleConfirmation,
         ]}
       >
-        {!own && (
-          <View style={styles.senderChip}>
-            <Text style={styles.sender}>{senderLabel[message.sender]}</Text>
-          </View>
-        )}
+        {!own && <Text style={styles.sender}>{senderLabel[message.sender]}</Text>}
         <Text
           style={[
             styles.text,
@@ -93,20 +89,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.successBorder,
   },
-  // “COMERCIO” en una píldora clara: se distingue del texto del mensaje.
-  senderChip: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginBottom: 3,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bubbleOtherNameBg,
-  },
+  // “COMERCIO” sin cápsula: rojo-marrón profundo, extra negrita y espaciado (5.9:1),
+  // así se distingue del texto del mensaje (marrón oscuro, peso normal).
   sender: {
     fontFamily: fonts.extrabold,
-    fontSize: 10,
-    letterSpacing: 0.6,
+    fontSize: 11.5,
+    letterSpacing: 0.9,
     color: colors.bubbleOtherName,
+    marginBottom: 2,
   },
   text: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },
   textOwn: { color: colors.bubbleOwnText },

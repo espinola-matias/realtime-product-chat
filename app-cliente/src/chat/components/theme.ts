@@ -33,8 +33,7 @@ export const colors = {
   bubbleOther: '#fb923c',
   bubbleOtherText: '#2a1607',
   bubbleOtherTime: '#5a2a0a', // 5.2:1
-  bubbleOtherNameBg: '#fff4ea', // etiqueta “COMERCIO” en píldora clara
-  bubbleOtherName: '#9a3412', // 6.7:1 sobre la píldora
+  bubbleOtherName: '#5c1500', // “COMERCIO”: 5.9:1 sobre bubbleOther, tono distinto al texto
 
   // Estados
   successSoft: '#e7f6ec',
