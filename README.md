@@ -51,7 +51,47 @@ _Se completa en las siguientes etapas._
 ```bash
 cd api
 npm install
-npm run start:dev
+cp .env.example .env      # PowerShell: Copy-Item .env.example .env
+npm run start:dev         # http://localhost:3000
+```
+
+| Script               | Qué hace                                      |
+| -------------------- | --------------------------------------------- |
+| `npm run start:dev`  | Servidor con recarga automática               |
+| `npm test`           | Pruebas unitarias de `orders.service.ts`      |
+| `npm run test:e2e`   | Pruebas HTTP de `/orders` (archivo temporal)  |
+| `npm run typecheck`  | `tsc --noEmit`                                |
+
+**Endpoints**
+
+| Método | Ruta          | Respuesta                                                                 |
+| ------ | ------------- | ------------------------------------------------------------------------- |
+| POST   | `/orders`     | 201 pedido creado · 400 datos inválidos · 409 la oferta ya tiene pedido    |
+| GET    | `/orders/:id` | 200 pedido · 404 no existe                                                 |
+
+Validaciones de `POST /orders`: `chatId`, `messageId` y `product.id` obligatorios; `product.price` número mayor que cero; `product.currency` código ISO de 3 letras; `product.imageUrl` URL opcional; campos extra rechazados; si `CHAT_ID` está definido, el `chatId` debe coincidir. Los pedidos se guardan en `orders.json` (`ORDERS_FILE`).
+
+**Probar a mano (PowerShell)**
+
+```powershell
+$body = @{
+  chatId    = "chat-demo-001"
+  messageId = "-Omsg1"
+  product   = @{ id = "p-101"; name = "Bandeja paisa"; price = 32000; currency = "COP"; imageUrl = "https://ejemplo.com/bandeja.jpg" }
+} | ConvertTo-Json
+$order = Invoke-RestMethod -Method Post -Uri http://localhost:3000/orders -ContentType "application/json" -Body $body
+$order
+Invoke-RestMethod http://localhost:3000/orders/$($order.id)
+```
+
+**Probar a mano (Git Bash / macOS / Linux)**
+
+```bash
+curl -i -X POST http://localhost:3000/orders \
+  -H "Content-Type: application/json" \
+  -d '{"chatId":"chat-demo-001","messageId":"-Omsg1","product":{"id":"p-101","name":"Bandeja paisa","price":32000,"currency":"COP","imageUrl":"https://ejemplo.com/bandeja.jpg"}}'
+
+curl -i http://localhost:3000/orders/<id-devuelto>
 ```
 
 ### Comercio web
