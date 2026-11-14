@@ -57,6 +57,21 @@
   background: var(--brand-tint);
 }
 
+/* "Otro producto": borde punteado para diferenciarlo de los ejemplos */
+.chip--other {
+  border-style: dashed;
+  color: var(--brand);
+}
+
+/* Chip elegido: naranja de marca */
+.chip--active,
+.chip--active:hover:not(:disabled) {
+  background: var(--brand);
+  border-color: var(--brand);
+  border-style: solid;
+  color: var(--text-on-brand);
+}
+
 .offer-form__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

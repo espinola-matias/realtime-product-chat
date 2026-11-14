@@ -43,6 +43,9 @@ const PRESETS: readonly Product[] = [
 
 const EMPTY: FormState = { id: '', name: '', price: '', currency: DEFAULT_CURRENCY, imageUrl: '' };
 
+/** Valor del chip "Otro producto". */
+const OTHER = 'otro';
+
 const isSignificant = (char: string): boolean => /[\d,]/.test(char);
 
 /** Posición en `text` justo después del carácter significativo número `count` (dígitos y coma). */
@@ -82,8 +85,25 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
   const [form, setForm] = useState<FormState>(initialProduct ? toFormState(initialProduct) : EMPTY);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  /** Qué chip está marcado: un ejemplo o "Otro producto" (formulario libre). */
+  const [choice, setChoice] = useState<string>(OTHER);
   const fieldId = useId();
   const priceRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  function choosePreset(preset: Product) {
+    setForm(toFormState(preset));
+    setChoice(preset.id);
+    setErrors([]);
+  }
+
+  /** Vacía el formulario (solo quedan los placeholders) para cargar un producto propio. */
+  function chooseOther() {
+    setForm(EMPTY);
+    setChoice(OTHER);
+    setErrors([]);
+    nameRef.current?.focus();
+  }
   /** Posición del cursor a restaurar tras reformatear el precio. */
   const pendingCaret = useRef<number | null>(null);
 
@@ -158,19 +178,29 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
       </div>
 
       {mode === 'create' && (
-        <div className="offer-form__presets">
+        <div className="offer-form__presets" role="group" aria-label="Productos de ejemplo">
           <span className="offer-form__presets-label">Ejemplos:</span>
           {PRESETS.map((preset) => (
             <button
               key={preset.id}
               type="button"
-              className="chip"
-              onClick={() => setForm(toFormState(preset))}
+              className={`chip ${choice === preset.id ? 'chip--active' : ''}`}
+              aria-pressed={choice === preset.id}
+              onClick={() => choosePreset(preset)}
               disabled={submitting}
             >
               {preset.name}
             </button>
           ))}
+          <button
+            type="button"
+            className={`chip chip--other ${choice === OTHER ? 'chip--active' : ''}`}
+            aria-pressed={choice === OTHER}
+            onClick={chooseOther}
+            disabled={submitting}
+          >
+            ✎ Otro producto
+          </button>
         </div>
       )}
 
@@ -178,6 +208,7 @@ export function OfferForm({ mode, initialProduct, onSubmit, onClose }: OfferForm
         <label className="field" htmlFor={`${fieldId}-name`}>
           <span>Nombre</span>
           <input
+            ref={nameRef}
             id={`${fieldId}-name`}
             value={form.name}
             onChange={(e) => update('name')(e.target.value)}

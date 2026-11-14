@@ -215,5 +215,31 @@
     },
     "status": "created",
     "createdAt": 1794688084561
+  },
+  {
+    "id": "81e1d532-94b2-49de-90cb-9731cda6957d",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QuW9K8obvm7P3NxhY",
+    "product": {
+      "id": "p-104",
+      "name": "Hielo",
+      "price": 2000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794690932085
+  },
+  {
+    "id": "8f4306b7-36b4-40ce-962d-96cc517f70dd",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QuRecXrxRqPBtVvTA",
+    "product": {
+      "id": "p-101",
+      "name": "Chipa tradicional (docena)",
+      "price": 36000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794690935463
   }
 ]
