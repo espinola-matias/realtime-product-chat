@@ -1,0 +1,15 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "chats": {
+      "$chatId": {
+        "messages": {
+          ".read": true,
+          ".write": true,
+          ".indexOn": ["createdAt"]
+        }
+      }
+    }
+  }
+}
