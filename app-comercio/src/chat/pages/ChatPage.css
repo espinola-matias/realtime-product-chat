@@ -130,8 +130,61 @@
 }
 
 .chat__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-right: 6px;
+  border: 1px solid transparent;
+  animation: notice-in 0.18s ease-out;
+}
+
+.chat__notice--success {
   background: var(--success-soft);
+  border-color: var(--success-border);
   color: var(--success-text);
+}
+
+.chat__notice--danger {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+
+.chat__notice-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chat__notice-close:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat__notice {
+    animation: none;
+  }
 }
 
 /* ── Compositor ── */

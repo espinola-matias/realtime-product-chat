@@ -19,6 +19,12 @@ const VIEWER: Sender = 'comercio';
 
 type OfferPanel = { mode: 'create' } | { mode: 'edit'; offer: ProductOfferMessage } | null;
 
+/** Aviso temporal: verde (éxito) o rojo (cancelación / problema). */
+type Notice = { kind: 'success' | 'danger'; text: string } | null;
+
+/** Tiempo que un aviso queda visible antes de cerrarse solo. */
+const NOTICE_DURATION_MS = 5000;
+
 interface ChatPageProps {
   chatId: string;
 }
@@ -56,7 +62,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
   const [connected, setConnected] = useState(false);
   const [listenError, setListenError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [offerPanel, setOfferPanel] = useState<OfferPanel>(null);
@@ -92,6 +98,13 @@ export function ChatPage({ chatId }: ChatPageProps) {
 
   useEffect(() => listenConnection(setConnected), []);
 
+  // Cada aviso nuevo se cierra solo a los 5 s (también se puede cerrar con la X).
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), NOTICE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   useEffect(() => {
     listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
@@ -102,7 +115,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
     const current = messages.find((m) => m.id === offerPanel.offer.id);
     if (!current || current.type !== 'product_offer' || current.status !== 'pending') {
       setOfferPanel(null);
-      setNotice('La oferta que estaba corrigiendo ya fue respondida o eliminada.');
+      setNotice({ kind: 'danger', text: 'La oferta que estaba corrigiendo ya fue respondida o eliminada.' });
     }
   }, [messages, offerPanel]);
 
@@ -133,7 +146,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
     setNotice(null);
     if (offerPanel?.mode === 'edit') {
       await updateOffer(chatId, offerPanel.offer.id, product);
-      setNotice('Oferta corregida.');
+      setNotice({ kind: 'success', text: 'Oferta corregida.' });
     } else {
       await sendProductOffer(chatId, product);
     }
@@ -152,7 +165,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
     setNotice(null);
     try {
       await cancelOffer(chatId, offer.id);
-      setNotice('Oferta cancelada.');
+      setNotice({ kind: 'danger', text: 'Oferta cancelada.' });
     } catch (error: unknown) {
       setActionError(errorText(error, 'No se pudo cancelar la oferta'));
     } finally {
@@ -218,7 +231,19 @@ export function ChatPage({ chatId }: ChatPageProps) {
           />
         )}
         {actionError && <p className="chat__error" role="alert">{actionError}</p>}
-        {notice && <p className="chat__notice" role="status">{notice}</p>}
+        {notice && (
+          <div className={`chat__notice chat__notice--${notice.kind}`} role="status">
+            <span>{notice.text}</span>
+            <button
+              type="button"
+              className="chat__notice-close"
+              onClick={() => setNotice(null)}
+              aria-label="Cerrar aviso"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <form className="composer" onSubmit={handleSubmit}>
           <button
