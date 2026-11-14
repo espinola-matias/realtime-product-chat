@@ -1,238 +1,8 @@
 [
   {
-    "id": "9e34a46c-f563-4718-83a7-9ff1d42ef158",
+    "id": "aa58dee9-6bd6-4c36-9a73-7dfe6a4db4c7",
     "chatId": "chat-demo-001",
-    "messageId": "-P6Q1yxku9jfVRXjrX35",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794676362639
-  },
-  {
-    "id": "5baab560-20e1-4a34-8db6-4358cb941cf4",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q2ZgApoPHf_-1r3R6",
-    "product": {
-      "id": "p-103",
-      "name": "Limonada de coco",
-      "price": 9500000,
-      "currency": "COP"
-    },
-    "status": "created",
-    "createdAt": 1794676547863
-  },
-  {
-    "id": "1d6f3510-7280-4641-a46d-b3800f839a6c",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q2xivRvsDWk8qDr-2",
-    "product": {
-      "id": "p-102",
-      "name": "Ajiaco santafereño",
-      "price": 28000,
-      "currency": "COP"
-    },
-    "status": "created",
-    "createdAt": 1794676617034
-  },
-  {
-    "id": "5bfc1faa-b8bc-4be3-a8a9-a3cbf55b5fbb",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q3aUwrjQ_XYkoqerH",
-    "product": {
-      "id": "p-103",
-      "name": "Limonada de coco",
-      "price": 9500,
-      "currency": "COP"
-    },
-    "status": "created",
-    "createdAt": 1794676785850
-  },
-  {
-    "id": "7da1afdf-8642-4541-af81-d811f3d29e26",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q3egGRHQjXyuj1ueF",
-    "product": {
-      "id": "p-103",
-      "name": "Limonada de coco",
-      "price": 9500,
-      "currency": "COP"
-    },
-    "status": "created",
-    "createdAt": 1794676802964
-  },
-  {
-    "id": "03ab8d2b-57f6-4075-916a-7aa05bf2fe27",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q7xJrRkV0HEZmG0pp",
-    "product": {
-      "id": "p-103",
-      "name": "Limonada de coco",
-      "price": 9500,
-      "currency": "COP",
-      "imageUrl": "https://www.laylita.com/recetas/el-coco-usos-en-la-cocina-y-recetas/"
-    },
-    "status": "created",
-    "createdAt": 1794677969314
-  },
-  {
-    "id": "53dbc5a7-90db-4d5c-8b29-54bab40cd9b1",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q7ojAfYNF9h5VtN-D",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794677975609
-  },
-  {
-    "id": "729484cc-6467-4643-b05c-eb4adafc86b0",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q8DHHGAS8LU74Lkd6",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794678005675
-  },
-  {
-    "id": "e5d64bf9-dff4-45b2-9ca1-a8ffb48a1f6a",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6Q8FKf0GDhjWJLAyOa",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 9999,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794678007801
-  },
-  {
-    "id": "f60ab174-a45f-4916-9d5d-390880b626d6",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QSrHf_EWu7-j9foBw",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "PYG",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794683409451
-  },
-  {
-    "id": "444a9dbc-e7d8-4cda-aba5-a30db74b7431",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QU7lHkzeqQfxIIqGt",
-    "product": {
-      "id": "p-102",
-      "name": "Chipa (docena)",
-      "price": 15000,
-      "currency": "PYG"
-    },
-    "status": "created",
-    "createdAt": 1794683772533
-  },
-  {
-    "id": "dba3ede0-a926-4e81-90b6-c1b8374b4f01",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QU9T8ZINPracr7S1K",
-    "product": {
-      "id": "p-103",
-      "name": "Limonada de coco",
-      "price": 4.5,
-      "currency": "USD"
-    },
-    "status": "created",
-    "createdAt": 1794683783344
-  },
-  {
-    "id": "ba51feac-b14e-4e32-a441-461e1a665f90",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QdFaZabltsnryPK9-",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794686435077
-  },
-  {
-    "id": "8f1d47dc-a987-442c-9d0d-051a4bd2e9e4",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QihRULLqbuZ_ZRyU5",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794687909758
-  },
-  {
-    "id": "56418f9b-eeed-4962-9196-1daf786d78bb",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QieZJhxUXkmqtTKGH",
-    "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://ejemplo.com/bandeja.jpg"
-    },
-    "status": "created",
-    "createdAt": 1794687941202
-  },
-  {
-    "id": "b152bac5-d69a-4f69-a008-fe02f3911a0a",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QjgiIP5z7fJI8DLsP",
-    "product": {
-      "id": "p-102",
-      "name": "Chipa (docena)",
-      "price": 15000,
-      "currency": "PYG"
-    },
-    "status": "created",
-    "createdAt": 1794688084561
-  },
-  {
-    "id": "81e1d532-94b2-49de-90cb-9731cda6957d",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QuW9K8obvm7P3NxhY",
-    "product": {
-      "id": "p-104",
-      "name": "Hielo",
-      "price": 2000,
-      "currency": "PYG"
-    },
-    "status": "created",
-    "createdAt": 1794690932085
-  },
-  {
-    "id": "8f4306b7-36b4-40ce-962d-96cc517f70dd",
-    "chatId": "chat-demo-001",
-    "messageId": "-P6QuRecXrxRqPBtVvTA",
+    "messageId": "-P6QvtACvMdDrG4t4lld",
     "product": {
       "id": "p-101",
       "name": "Chipa tradicional (docena)",
@@ -240,6 +10,19 @@
       "currency": "PYG"
     },
     "status": "created",
-    "createdAt": 1794690935463
+    "createdAt": 1794691287063
+  },
+  {
+    "id": "65a5302b-9d00-41b3-b248-dfefbc699b18",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QwK2o4WJMS90YNyT6",
+    "product": {
+      "id": "p-103",
+      "name": "Donas glaseadas (docena)",
+      "price": 10,
+      "currency": "USD"
+    },
+    "status": "created",
+    "createdAt": 1794693119918
   }
 ]

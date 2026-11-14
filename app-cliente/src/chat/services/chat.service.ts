@@ -138,8 +138,7 @@ export function parseMessages(value: unknown): ChatMessage[] {
 /* ───────────────────────────── Operaciones del chat ───────────────────────────── */
 
 /**
- * Escribe un mensaje nuevo con la misma forma que el ejemplo del enunciado:
- * el `id` va también DENTRO del nodo y es igual a su key de Firebase.
+ * Escribe un mensaje nuevo con su `id` dentro del nodo, igual a su key de Firebase.
  * `push()` sin valor solo genera la key (en local, sin red); luego `set()` escribe todo junto.
  */
 async function pushMessage(chatId: string, message: ChatMessageData): Promise<string> {

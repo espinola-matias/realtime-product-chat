@@ -12,7 +12,7 @@ export interface Product {
 }
 
 interface BaseMessage {
-  /** Key generada por push(). Se guarda también dentro del nodo (igual al ejemplo del enunciado); al leer manda la key. */
+  /** Key generada por push(). También se guarda dentro del nodo como `id`; al leer manda la key. */
   id: string;
   sender: Sender;
   /** Date.now() al enviar. */

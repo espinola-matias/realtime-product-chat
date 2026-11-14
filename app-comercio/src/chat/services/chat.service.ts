@@ -129,8 +129,7 @@ export function parseMessages(value: unknown): ChatMessage[] {
 /* ───────────────────────────── Operaciones del chat ───────────────────────────── */
 
 /**
- * Escribe un mensaje nuevo con la misma forma que el ejemplo del enunciado:
- * el `id` va también DENTRO del nodo y es igual a su key de Firebase.
+ * Escribe un mensaje nuevo con su `id` dentro del nodo, igual a su key de Firebase.
  * `push()` sin valor solo genera la key (en local, sin red); luego `set()` escribe todo junto.
  */
 async function pushMessage(chatId: string, message: ChatMessageData): Promise<string> {
@@ -265,7 +264,7 @@ export async function updateOffer(
 
 /**
  * Cancela (borra) una oferta que sigue `pending`.
- * El enunciado solo admite pending | accepted | rejected, así que cancelar = eliminar el mensaje.
+ * Los estados de una oferta son pending | accepted | rejected, así que cancelar = eliminar el mensaje.
  */
 export async function cancelOffer(chatId: string, messageId: string): Promise<void> {
   let result;

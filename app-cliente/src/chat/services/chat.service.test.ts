@@ -110,7 +110,7 @@ describe('sendTextMessage', () => {
 
     expect(id).toBe('-Onuevo');
     expect(refMock).toHaveBeenCalledWith(expect.anything(), `chats/${CHAT_ID}/messages`);
-    // push() solo genera la key; set() guarda el mensaje con su id dentro (igual al enunciado).
+    // push() solo genera la key; set() guarda el mensaje con su id dentro.
     expect(pushMock).toHaveBeenCalledWith(expect.objectContaining({ path: `chats/${CHAT_ID}/messages` }));
     expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ key: '-Onuevo' }), {
       id: '-Onuevo',
@@ -449,22 +449,22 @@ describe('listenConnection', () => {
   });
 });
 
-/* ─────────────── Forma exacta del enunciado (id dentro del nodo) ─────────────── */
+/* ───────────────────── Mensajes con id dentro del nodo ───────────────────── */
 
-describe('forma del enunciado con id', () => {
-  it('lee el texto del ejemplo del PDF tal cual (con id dentro)', () => {
-    const pdfText = {
+describe('mensajes con id dentro del nodo', () => {
+  it('lee un mensaje de texto con su id dentro', () => {
+    const textNode = {
       id: '-Omsg0',
       sender: 'cliente',
       type: 'text',
       text: 'Hola, ¿sigue disponible?',
       createdAt: 1731023940000,
     };
-    expect(parseMessage('-Omsg0', pdfText)).toEqual(pdfText);
+    expect(parseMessage('-Omsg0', textNode)).toEqual(textNode);
   });
 
-  it('lee la oferta del ejemplo del PDF tal cual (con id dentro)', () => {
-    const pdfOffer = {
+  it('lee una oferta con su id dentro', () => {
+    const offerNode2 = {
       id: '-Omsg1',
       sender: 'comercio',
       type: 'product_offer',
@@ -478,7 +478,7 @@ describe('forma del enunciado con id', () => {
       },
       createdAt: 1731024000000,
     };
-    expect(parseMessage('-Omsg1', pdfOffer)).toEqual(pdfOffer);
+    expect(parseMessage('-Omsg1', offerNode2)).toEqual(offerNode2);
   });
 
   it('el id siempre es la key de Firebase (si el nodo trae otro, manda la key)', () => {
