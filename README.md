@@ -99,8 +99,18 @@ curl -i http://localhost:3000/orders/<id-devuelto>
 ```bash
 cd app-comercio
 npm install
-npm run dev
+cp .env.example .env      # PowerShell: Copy-Item .env.example .env  → completar con los datos de Firebase
+npm run dev               # http://localhost:5173
 ```
+
+| Script               | Qué hace                                         |
+| -------------------- | ------------------------------------------------ |
+| `npm run dev`        | Servidor de desarrollo de Vite                   |
+| `npm test`           | Pruebas de `chat.service.ts` (Vitest)            |
+| `npm run typecheck`  | `tsc --noEmit`                                   |
+| `npm run build`      | Typecheck + build de producción                  |
+
+Si falta alguna variable `VITE_*`, la app muestra en pantalla cuál es en lugar de quedar en blanco.
 
 ### Cliente móvil
 
