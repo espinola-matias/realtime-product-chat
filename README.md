@@ -66,7 +66,7 @@ npm run start:dev         # http://localhost:3000
 
 | Método | Ruta          | Respuesta                                                                 |
 | ------ | ------------- | ------------------------------------------------------------------------- |
-| POST   | `/orders`     | 201 pedido creado · 400 datos inválidos · 409 la oferta ya tiene pedido    |
+| POST   | `/orders`     | 201 pedido creado · 400 datos inválidos · 409 la oferta ya tiene pedido (incluye `orderId` del pedido existente) |
 | GET    | `/orders/:id` | 200 pedido · 404 no existe                                                 |
 
 Validaciones de `POST /orders`: `chatId`, `messageId` y `product.id` obligatorios; `product.price` número mayor que cero; `product.currency` código ISO de 3 letras; `product.imageUrl` URL opcional; campos extra rechazados; si `CHAT_ID` está definido, el `chatId` debe coincidir. Los pedidos se guardan en `orders.json` (`ORDERS_FILE`).

@@ -65,9 +65,14 @@ export class OrdersService implements OnModuleInit {
     // Comprobación y alta en el mismo tick: ningún otro request se cuela en medio.
     const existing = this.orders.find((o) => o.messageId === dto.messageId);
     if (existing) {
-      throw new ConflictException(
-        `La oferta ${dto.messageId} ya tiene el pedido ${existing.id}`,
-      );
+      // Se incluye orderId para que el cliente pueda completar una aprobación
+      // interrumpida (pedido guardado pero Firebase sin actualizar) sin duplicar.
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        message: `La oferta ${dto.messageId} ya tiene el pedido ${existing.id}`,
+        orderId: existing.id,
+      });
     }
 
     const order: Order = {

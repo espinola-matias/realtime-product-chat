@@ -1,7 +1,9 @@
 import {
+  get,
   onValue,
   push,
   ref,
+  runTransaction,
   type DataSnapshot,
   type Unsubscribe,
 } from 'firebase/database';
@@ -11,12 +13,37 @@ import type {
   ChatMessageData,
   OfferStatus,
   Product,
+  ProductOfferMessage,
   Sender,
 } from '../interfaces/chat-message.interface';
+import type { CreateOrderRequest, Order } from '../interfaces/order.interface';
 
 export const MAX_TEXT_LENGTH = 1000;
+export const API_TIMEOUT_MS = 10_000;
 
 const messagesPath = (chatId: string): string => `chats/${chatId}/messages`;
+const messagePath = (chatId: string, messageId: string): string =>
+  `${messagesPath(chatId)}/${messageId}`;
+
+/** La oferta ya fue respondida (o eliminada) y no admite otra respuesta. */
+export class OfferAlreadyAnsweredError extends Error {
+  constructor(message = 'Esta oferta ya fue respondida') {
+    super(message);
+    this.name = 'OfferAlreadyAnsweredError';
+  }
+}
+
+/** Error HTTP de la API, con el código y (si viene) el orderId del 409. */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly orderId?: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -131,6 +158,193 @@ export async function sendTextMessage(
   } catch (error: unknown) {
     throw new Error(`No se pudo enviar el mensaje: ${describeError(error)}`, { cause: error });
   }
+}
+
+/* ──────────────────────── Respuesta a ofertas (solo cliente) ──────────────────────── */
+
+/** Lee el estado actual de una oferta desde el servidor (null si no existe o no es oferta). */
+export async function getOffer(chatId: string, messageId: string): Promise<ProductOfferMessage | null> {
+  let snapshot: DataSnapshot;
+  try {
+    snapshot = await get(ref(getDb(), messagePath(chatId, messageId)));
+  } catch (error: unknown) {
+    throw new Error(`No se pudo leer la oferta: ${describeError(error)}`, { cause: error });
+  }
+  const message = parseMessage(messageId, snapshot.val());
+  return message?.type === 'product_offer' ? message : null;
+}
+
+const isPendingOffer = (value: unknown): value is UnknownRecord =>
+  isRecord(value) && value.type === 'product_offer' && value.status === 'pending';
+
+/**
+ * Marca la oferta como accepted/rejected con una transacción:
+ * solo escribe si sigue `pending`, así nunca se responde dos veces.
+ */
+export async function answerOffer(
+  chatId: string,
+  messageId: string,
+  status: Exclude<OfferStatus, 'pending'>,
+  orderId?: string,
+): Promise<void> {
+  if (status === 'accepted' && !orderId) {
+    throw new Error('Para aceptar una oferta se necesita el id del pedido');
+  }
+
+  let result;
+  try {
+    result = await runTransaction(ref(getDb(), messagePath(chatId, messageId)), (current: unknown) => {
+      // null = caché local vacía: se devuelve tal cual para que Firebase reintente con el valor real.
+      if (current === null) return null;
+      if (!isPendingOffer(current)) return undefined; // aborta: ya respondida
+      return {
+        ...current,
+        status,
+        answeredAt: Date.now(),
+        ...(status === 'accepted' && orderId ? { orderId } : {}),
+      };
+    });
+  } catch (error: unknown) {
+    throw new Error(`No se pudo actualizar la oferta: ${describeError(error)}`, { cause: error });
+  }
+
+  if (!result.committed) throw new OfferAlreadyAnsweredError();
+  if (!result.snapshot.exists()) throw new OfferAlreadyAnsweredError('La oferta ya no existe (el comercio la canceló)');
+}
+
+/** Publica en el chat la confirmación del pedido (mensaje `order_accepted`). */
+export async function sendOrderAccepted(
+  chatId: string,
+  orderId: string,
+  offerMessageId: string,
+  productName: string,
+): Promise<string> {
+  try {
+    return await pushMessage(chatId, {
+      sender: 'cliente',
+      type: 'order_accepted',
+      orderId,
+      offerMessageId,
+      text: `✅ Pedido confirmado: ${productName}`,
+      createdAt: Date.now(),
+    });
+  } catch (error: unknown) {
+    throw new Error(`No se pudo publicar la confirmación: ${describeError(error)}`, { cause: error });
+  }
+}
+
+/* ────────────────────────────────── API REST ────────────────────────────────── */
+
+function isOrder(value: unknown): value is Order {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.chatId) &&
+    isString(value.messageId) &&
+    value.status === 'created' &&
+    isFiniteNumber(value.createdAt) &&
+    parseProduct(value.product) !== null
+  );
+}
+
+/** Extrae el mensaje legible de un error de NestJS ({ message: string | string[] }). */
+function apiErrorMessage(body: unknown, status: number): string {
+  if (isRecord(body)) {
+    const { message } = body;
+    if (isString(message)) return message;
+    if (Array.isArray(message)) return message.filter(isString).join('. ');
+  }
+  return `La API respondió ${status}`;
+}
+
+/** Guarda el pedido en la API (POST /orders). Lanza ApiError si la respuesta no es 2xx. */
+export async function saveOrder(apiBase: string, order: CreateOrderRequest): Promise<Order> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(order),
+      signal: controller.signal,
+    });
+  } catch (error: unknown) {
+    const reason = controller.signal.aborted ? 'tiempo de espera agotado' : describeError(error);
+    throw new Error(
+      `No se pudo conectar con la API (${apiBase}): ${reason}. Verifique que esté encendida y que EXPO_PUBLIC_API_URL sea correcta.`,
+      { cause: error },
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const orderId = isRecord(body) && isString(body.orderId) ? body.orderId : undefined;
+    throw new ApiError(`No se pudo guardar el pedido: ${apiErrorMessage(body, response.status)}`, response.status, orderId);
+  }
+  if (!isOrder(body)) {
+    throw new ApiError('La API devolvió un pedido con formato inesperado', response.status);
+  }
+  return body;
+}
+
+/* ───────────────────────────── Flujos Aprobar / Rechazar ───────────────────────────── */
+
+export interface ApproveResult {
+  orderId: string;
+  /** true si el pedido ya existía (aprobación previa interrumpida) y se reutilizó. */
+  recovered: boolean;
+  /** Aviso no bloqueante: el pedido quedó aceptado pero falló el mensaje de confirmación. */
+  warning?: string;
+}
+
+/**
+ * Aprobar una oferta, en este orden:
+ * 1. Verifica en el servidor que siga `pending`.
+ * 2. POST /orders. Si falla, la oferta NO cambia de estado.
+ *    (409 con orderId = el pedido ya existía: se reutiliza para completar la aprobación).
+ * 3. Transacción → `accepted` con el orderId.
+ * 4. Mensaje `order_accepted` en el chat (si falla, solo se avisa).
+ */
+export async function approveOffer(
+  apiBase: string,
+  chatId: string,
+  messageId: string,
+): Promise<ApproveResult> {
+  const offer = await getOffer(chatId, messageId);
+  if (!offer) throw new OfferAlreadyAnsweredError('La oferta ya no existe (el comercio la canceló)');
+  if (offer.status !== 'pending') throw new OfferAlreadyAnsweredError();
+
+  let orderId: string;
+  let recovered = false;
+  try {
+    orderId = (await saveOrder(apiBase, { chatId, messageId, product: offer.product })).id;
+  } catch (error: unknown) {
+    if (error instanceof ApiError && error.status === 409 && error.orderId) {
+      orderId = error.orderId;
+      recovered = true;
+    } else {
+      throw error;
+    }
+  }
+
+  await answerOffer(chatId, messageId, 'accepted', orderId);
+
+  try {
+    await sendOrderAccepted(chatId, orderId, messageId, offer.product.name);
+    return { orderId, recovered };
+  } catch (error: unknown) {
+    return { orderId, recovered, warning: describeError(error) };
+  }
+}
+
+/** Rechazar una oferta: solo actualiza Firebase, no llama a la API. */
+export function rejectOffer(chatId: string, messageId: string): Promise<void> {
+  return answerOffer(chatId, messageId, 'rejected');
 }
 
 /**

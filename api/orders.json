@@ -1,0 +1,68 @@
+[
+  {
+    "id": "9e34a46c-f563-4718-83a7-9ff1d42ef158",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q1yxku9jfVRXjrX35",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794676362639
+  },
+  {
+    "id": "5baab560-20e1-4a34-8db6-4358cb941cf4",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q2ZgApoPHf_-1r3R6",
+    "product": {
+      "id": "p-103",
+      "name": "Limonada de coco",
+      "price": 9500000,
+      "currency": "COP"
+    },
+    "status": "created",
+    "createdAt": 1794676547863
+  },
+  {
+    "id": "1d6f3510-7280-4641-a46d-b3800f839a6c",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q2xivRvsDWk8qDr-2",
+    "product": {
+      "id": "p-102",
+      "name": "Ajiaco santafereño",
+      "price": 28000,
+      "currency": "COP"
+    },
+    "status": "created",
+    "createdAt": 1794676617034
+  },
+  {
+    "id": "5bfc1faa-b8bc-4be3-a8a9-a3cbf55b5fbb",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q3aUwrjQ_XYkoqerH",
+    "product": {
+      "id": "p-103",
+      "name": "Limonada de coco",
+      "price": 9500,
+      "currency": "COP"
+    },
+    "status": "created",
+    "createdAt": 1794676785850
+  },
+  {
+    "id": "7da1afdf-8642-4541-af81-d811f3d29e26",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6Q3egGRHQjXyuj1ueF",
+    "product": {
+      "id": "p-103",
+      "name": "Limonada de coco",
+      "price": 9500,
+      "currency": "COP"
+    },
+    "status": "created",
+    "createdAt": 1794676802964
+  }
+]

@@ -80,9 +80,15 @@ describe('OrdersController (e2e)', () => {
     return request(app.getHttpServer()).get('/orders/no-existe').expect(404);
   });
 
-  it('POST /orders duplicado (mismo messageId) → 409', async () => {
-    await request(app.getHttpServer()).post('/orders').send(validBody).expect(201);
-    await request(app.getHttpServer()).post('/orders').send(validBody).expect(409);
+  it('POST /orders duplicado (mismo messageId) → 409 con el orderId existente', async () => {
+    const first = await request(app.getHttpServer()).post('/orders').send(validBody).expect(201);
+    const res = await request(app.getHttpServer()).post('/orders').send(validBody).expect(409);
+
+    expect(res.body).toMatchObject({
+      statusCode: 409,
+      error: 'Conflict',
+      orderId: (first.body as Order).id,
+    });
   });
 
   it.each([

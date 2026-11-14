@@ -2,15 +2,17 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from './chat/components/theme';
-import { getChatId, getDb } from './chat/config/firebase';
+import { getApiUrl, getChatId } from './chat/config/env';
+import { getDb } from './chat/config/firebase';
 import { ChatScreen } from './chat/screens/ChatScreen';
 
-type Setup = { ok: true; chatId: string } | { ok: false; message: string };
+type Setup = { ok: true; chatId: string; apiUrl: string } | { ok: false; message: string };
 
+/** Valida toda la configuración al arrancar para mostrar un error claro en vez de fallar después. */
 function loadSetup(): Setup {
   try {
-    getDb(); // valida las variables de Firebase al arrancar
-    return { ok: true, chatId: getChatId() };
+    getDb();
+    return { ok: true, chatId: getChatId(), apiUrl: getApiUrl() };
   } catch (error: unknown) {
     return { ok: false, message: error instanceof Error ? error.message : String(error) };
   }
@@ -23,7 +25,7 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="dark" />
       {setup.ok ? (
-        <ChatScreen chatId={setup.chatId} />
+        <ChatScreen chatId={setup.chatId} apiUrl={setup.apiUrl} />
       ) : (
         <View style={styles.errorBox} accessibilityRole="alert">
           <Text style={styles.errorTitle}>No se pudo iniciar el chat</Text>
