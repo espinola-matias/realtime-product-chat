@@ -114,8 +114,43 @@ Si falta alguna variable `VITE_*`, la app muestra en pantalla cuál es en lugar 
 
 ### Cliente móvil
 
+Expo SDK 58 (React Native 0.88). Se ejecuta en **Expo Go**, sin compilar código nativo.
+
 ```bash
 cd app-cliente
 npm install
-npm run android   # o: npm run ios
+cp .env.example .env      # PowerShell: Copy-Item .env.example .env  → mismos datos de Firebase que app-comercio
 ```
+
+Elija **una** forma de ejecutarlo:
+
+| Opción | Comando | ¿Cuenta de Expo? | Requisitos | `EXPO_PUBLIC_API_URL` |
+| ------ | ------- | ---------------- | ---------- | --------------------- |
+| **Navegador** (la más rápida para evaluar) | `npm run web` → http://localhost:8081 | No | Ninguno | `http://localhost:3000` |
+| **Emulador Android** | `npm run android` | No | Android Studio con un emulador encendido | `http://10.0.2.2:3000` |
+| **Teléfono Android** | `npx expo start` → escanear QR desde Expo Go | No | Expo Go, misma Wi-Fi que la PC | `http://<IP-LAN-de-la-PC>:3000` |
+| **Simulador iOS** | `npm run ios` | No | macOS con Xcode | `http://localhost:3000` |
+| **iPhone físico** | `npx expo start` → escanear QR con la cámara | **Sí** (ver abajo) | Expo Go, misma Wi-Fi que la PC | `http://<IP-LAN-de-la-PC>:3000` |
+
+La opción **Navegador** ejecuta el mismo código React Native con `react-native-web`: sirve para probar el flujo completo sin dispositivo ni cuentas. Con `npm run dev` del comercio abierto en otra pestaña se ven ambos lados a la vez.
+
+**iPhone físico:** por política de Apple, Expo Go en iOS solo abre proyectos de un usuario con sesión iniciada. Cree una cuenta gratuita en expo.dev e inicie sesión con **la misma cuenta** en la app Expo Go y en la PC, de una de estas dos formas:
+
+- Interactiva: `npx expo login`.
+- Sin prompt, con token: en expo.dev → *Account settings → Access tokens* cree un token y defínalo antes de arrancar (no lo guarde en el repo):
+
+  ```powershell
+  $env:EXPO_TOKEN = "<su-token>"; npx expo start
+  ```
+
+Si el teléfono no conecta por la red local, use `npx expo start --tunnel`. La IP LAN de la PC se obtiene con `ipconfig` → "Dirección IPv4" del adaptador Wi-Fi.
+
+**Variables:** Expo lee `.env` al arrancar. Si cambia un valor, reinicie con `npx expo start -c` (limpia la caché).
+
+| Script               | Qué hace                                         |
+| -------------------- | ------------------------------------------------ |
+| `npm run web`        | `expo start --web` (cliente en el navegador)     |
+| `npm run android`    | `expo start --android`                           |
+| `npm run ios`        | `expo start --ios`                               |
+| `npm test`           | Pruebas de `chat.service.ts` (jest-expo)         |
+| `npm run typecheck`  | `tsc --noEmit`                                   |

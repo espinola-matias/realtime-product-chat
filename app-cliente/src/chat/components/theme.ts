@@ -1,0 +1,20 @@
+/** Paleta compartida por los componentes del chat (misma línea visual que app-comercio). */
+export const colors = {
+  bg: '#eef1f5',
+  surface: '#ffffff',
+  surfaceRaised: '#f8f9fb',
+  border: '#dde2e8',
+  text: '#1c2430',
+  textMuted: '#667085',
+  accent: '#2563eb',
+  onAccent: '#ffffff',
+  onAccentMuted: 'rgba(255,255,255,0.75)',
+  bubbleOther: '#ffffff',
+  successSoft: '#e7f6ec',
+  successBorder: '#b7e3c5',
+  successText: '#166534',
+  dangerSoft: '#fdecec',
+  dangerText: '#b42318',
+  warningSoft: '#fff6e0',
+  warningText: '#8a5a00',
+} as const;
