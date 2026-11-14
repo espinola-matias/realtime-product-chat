@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import logoUrl from '../../assets/logo-comercio.webp';
 import { MessageBubble } from '../components/MessageBubble';
 import { OfferForm } from '../components/OfferForm';
 import { ProductOfferCard } from '../components/ProductOfferCard';
@@ -25,6 +26,30 @@ interface ChatPageProps {
 const errorText = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
+const INPUT_MAX_HEIGHT = 160;
+
+function SendIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="8" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function ChatPage({ chatId }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +62,15 @@ export function ChatPage({ chatId }: ChatPageProps) {
   const [offerPanel, setOfferPanel] = useState<OfferPanel>(null);
   const [busyOfferId, setBusyOfferId] = useState<string | null>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // El campo crece en alto con el texto (nunca en ancho) hasta INPUT_MAX_HEIGHT.
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(input.scrollHeight + 2, INPUT_MAX_HEIGHT)}px`;
+  }, [draft]);
 
   // Listener en tiempo real de los mensajes del chat.
   useEffect(() => {
@@ -130,12 +164,16 @@ export function ChatPage({ chatId }: ChatPageProps) {
 
   return (
     <div className="chat">
-      <header className="chat__header">
-        <div>
-          <h1 className="chat__title">Chat con el cliente</h1>
-          <p className="chat__subtitle">
-            Comercio · chat <code>{chatId}</code>
-          </p>
+      <header className="chat__header" title={`Chat ${chatId}`}>
+        <div className="chat__brand">
+          <img className="chat__logo" src={logoUrl} alt="App Comercio" width={44} height={44} />
+          <h1 className="chat__title">
+            <span className="chat__title-brand">Comercio</span>
+            <span className="chat__title-sep" aria-hidden="true">
+              ·
+            </span>
+            Chat
+          </h1>
         </div>
         <span className={`chat__status ${connected ? 'chat__status--on' : ''}`}>
           {connected ? 'En línea' : 'Sin conexión'}
@@ -185,16 +223,19 @@ export function ChatPage({ chatId }: ChatPageProps) {
         <form className="composer" onSubmit={handleSubmit}>
           <button
             type="button"
-            className="button"
+            className="button button--outline"
             onClick={() => {
               setNotice(null);
               setOfferPanel(offerPanel?.mode === 'create' ? null : { mode: 'create' });
             }}
             aria-expanded={offerPanel?.mode === 'create'}
+            aria-label="Enviar oferta"
           >
-            Enviar oferta
+            <TagIcon />
+            <span className="composer__offer-label">Enviar oferta</span>
           </button>
           <textarea
+            ref={inputRef}
             className="composer__input"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -206,6 +247,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
           />
           <button className="button button--primary" type="submit" disabled={sending || !draft.trim()}>
             {sending ? 'Enviando…' : 'Enviar'}
+            {!sending && <SendIcon />}
           </button>
         </form>
       </footer>
