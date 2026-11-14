@@ -24,5 +24,83 @@
     },
     "status": "created",
     "createdAt": 1794693119918
+  },
+  {
+    "id": "70b2951c-20da-41ca-ba60-e59e3ef36f54",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6R8y5a2dcPok5aaLhe",
+    "product": {
+      "id": "p-101",
+      "name": "Chipa tradicional (docena)",
+      "price": 36000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794694969960
+  },
+  {
+    "id": "6838952b-f496-4bdb-9d55-6a99a0954384",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6R9953gGOiZrhgF9X6",
+    "product": {
+      "id": "p-103",
+      "name": "Donas glaseadas (docena)",
+      "price": 12,
+      "currency": "USD"
+    },
+    "status": "created",
+    "createdAt": 1794695017486
+  },
+  {
+    "id": "99a17f8b-3f99-4c78-8ca2-890243e1e70f",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6RBFX_egks3ss5cw1q",
+    "product": {
+      "id": "p-101",
+      "name": "Chipa tradicional (docena)",
+      "price": 36000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794695574881
+  },
+  {
+    "id": "9f690ed9-7a14-4229-bcf4-527357bf3a29",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6RBH-wlMseCENF1fb-",
+    "product": {
+      "id": "p-102",
+      "name": "Pão de queijo",
+      "price": 6,
+      "currency": "BRL"
+    },
+    "status": "created",
+    "createdAt": 1794695576349
+  },
+  {
+    "id": "fdecaf3a-4772-4a89-b679-772ebf290f71",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6RBoy1QOjztAhq942K",
+    "product": {
+      "id": "p-101",
+      "name": "Chipa tradicional (docena)",
+      "price": 36000,
+      "currency": "PYG"
+    },
+    "status": "created",
+    "createdAt": 1794695717848
+  },
+  {
+    "id": "758db645-cb7f-4a04-a12a-3439a4ae641d",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6RC5URzD857umSEnwd",
+    "product": {
+      "id": "p-103",
+      "name": "Donas glaseadas (docena)",
+      "price": 12,
+      "currency": "USD"
+    },
+    "status": "created",
+    "createdAt": 1794695873393
   }
 ]

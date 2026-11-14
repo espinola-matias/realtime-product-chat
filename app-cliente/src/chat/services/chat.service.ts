@@ -17,7 +17,7 @@ import type {
   ProductOfferMessage,
   Sender,
 } from '../interfaces/chat-message.interface';
-import type { CreateOrderRequest, Order } from '../interfaces/order.interface';
+import type { ChatOrderSummary, CreateOrderRequest, Order } from '../interfaces/order.interface';
 import { formatPrice } from './currency';
 
 export const MAX_TEXT_LENGTH = 1000;
@@ -26,6 +26,7 @@ export const API_TIMEOUT_MS = 10_000;
 const messagesPath = (chatId: string): string => `chats/${chatId}/messages`;
 const messagePath = (chatId: string, messageId: string): string =>
   `${messagesPath(chatId)}/${messageId}`;
+const orderPath = (chatId: string, orderId: string): string => `chats/${chatId}/orders/${orderId}`;
 
 /** La oferta ya fue respondida (o eliminada) y no admite otra respuesta. */
 export class OfferAlreadyAnsweredError extends Error {
@@ -251,6 +252,24 @@ export async function sendOrderAccepted(
   }
 }
 
+/**
+ * Guarda el resumen del pedido en /chats/{chatId}/orders/{orderId}: así los pedidos
+ * se encuentran en un nodo propio en lugar de buscarlos entre los mensajes.
+ */
+export async function saveOrderSummary(
+  chatId: string,
+  orderId: string,
+  offerMessageId: string,
+  product: Product,
+): Promise<void> {
+  const summary: ChatOrderSummary = { orderId, offerMessageId, product, createdAt: Date.now() };
+  try {
+    await set(ref(getDb(), orderPath(chatId, orderId)), summary);
+  } catch (error: unknown) {
+    throw new Error(`No se pudo registrar el pedido en el chat: ${describeError(error)}`, { cause: error });
+  }
+}
+
 /* ────────────────────────────────── API REST ────────────────────────────────── */
 
 function isOrder(value: unknown): value is Order {
@@ -326,7 +345,7 @@ export interface ApproveResult {
  * 2. POST /orders. Si falla, la oferta NO cambia de estado.
  *    (409 con orderId = el pedido ya existía: se reutiliza para completar la aprobación).
  * 3. Transacción → `accepted` con el orderId.
- * 4. Mensaje `order_accepted` en el chat (si falla, solo se avisa).
+ * 4. Resumen en /orders/{orderId} y mensaje `order_accepted` en el chat (si fallan, solo se avisa).
  */
 export async function approveOffer(
   apiBase: string,
@@ -352,12 +371,17 @@ export async function approveOffer(
 
   await answerOffer(chatId, messageId, 'accepted', orderId);
 
-  try {
-    await sendOrderAccepted(chatId, orderId, messageId, offer.product);
-    return { orderId, recovered };
-  } catch (error: unknown) {
-    return { orderId, recovered, warning: describeError(error) };
+  // El pedido ya está aceptado: estos dos pasos no lo deshacen si fallan, solo avisan.
+  const warnings: string[] = [];
+  const steps = await Promise.allSettled([
+    saveOrderSummary(chatId, orderId, messageId, offer.product),
+    sendOrderAccepted(chatId, orderId, messageId, offer.product),
+  ]);
+  for (const step of steps) {
+    if (step.status === 'rejected') warnings.push(describeError(step.reason));
   }
+
+  return warnings.length > 0 ? { orderId, recovered, warning: warnings.join(' · ') } : { orderId, recovered };
 }
 
 /** Rechazar una oferta: solo actualiza Firebase, no llama a la API. */

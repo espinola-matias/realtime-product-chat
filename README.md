@@ -200,22 +200,25 @@ Pedido guardado en [`api/orders.json`](api/orders.json) al aprobar la oferta de 
 ```json
 [
   {
-    "id": "aa58dee9-6bd6-4c36-9a73-7dfe6a4db4c7",
+    "id": "758db645-cb7f-4a04-a12a-3439a4ae641d",
     "chatId": "chat-demo-001",
-    "messageId": "-P6QvtACvMdDrG4t4lld",
+    "messageId": "-P6RC5URzD857umSEnwd",
     "product": {
-      "id": "p-101",
-      "name": "Chipa tradicional (docena)",
-      "price": 36000,
-      "currency": "PYG"
+      "id": "p-103",
+      "name": "Donas glaseadas (docena)",
+      "price": 12,
+      "currency": "USD"
     },
     "status": "created",
-    "createdAt": 1794691287063
+    "createdAt": 1794695873393
   }
 ]
 ```
 
 `messageId` es el id de la oferta en Firebase y `id` es el N.º de pedido que muestran ambas apps en la confirmación.
+
+En Firebase, cada pedido aprobado queda además en su propio nodo, separado de los mensajes del chat:
+`/chats/{chatId}/orders/{N.º de pedido}` → `{ orderId, offerMessageId, product, createdAt }`.
 
 > La API carga `orders.json` al arrancar y lo mantiene en memoria. Para vaciarlo: detener la API, dejar el archivo en `[]` y volver a arrancarla.
 
@@ -227,7 +230,7 @@ Pedido guardado en [`api/orders.json`](api/orders.json) al aprobar la oferta de 
 | `api`          | `npm test`         | `orders.service.ts`: alta, 409 por duplicado (también simultáneo), 400 por chatId ajeno, 404, persistencia, errores de lectura/escritura | 14 |
 | `api`          | `npm run test:e2e` | `POST /orders` y `GET /orders/:id` por HTTP: 201, 200, 404, 409 y los casos de 400 | 16 |
 | `app-comercio` | `npm test`         | `chat.service.ts` (lectura validada de Firebase, envío, ofertas, corrección y cancelación con transacción) y `currency.ts` | 74 |
-| `app-cliente`  | `npm test`         | `chat.service.ts` (aprobar/rechazar, `POST /orders`, recuperación ante 409, doble respuesta, confirmación) y `currency.ts` | 70 |
+| `app-cliente`  | `npm test`         | `chat.service.ts` (aprobar/rechazar, `POST /orders`, recuperación ante 409, doble respuesta, confirmación, resumen en `orders`) y `currency.ts` | 72 |
 
 `npm run typecheck` ejecuta `tsc --noEmit` en cada pieza (TypeScript en modo `strict`). En las apps, `npm run test:cov` muestra la cobertura.
 

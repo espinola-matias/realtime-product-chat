@@ -343,6 +343,44 @@ describe('approveOffer', () => {
     expect(fetchOrder).toBeLessThan(txOrder);
   });
 
+  it('registra el resumen del pedido en /chats/{chatId}/orders/{orderId}', async () => {
+    mockGet(offerNode);
+    fetchMock.mockResolvedValue(jsonResponse(201, createdOrder));
+    mockServerValue(offerNode);
+
+    await approveOffer(API, CHAT_ID, '-Omsg1');
+
+    expect(setMock).toHaveBeenCalledWith(
+      expect.objectContaining({ path: `chats/${CHAT_ID}/orders/order-uuid-1` }),
+      {
+        orderId: 'order-uuid-1',
+        offerMessageId: '-Omsg1',
+        product: offerNode.product,
+        createdAt: expect.any(Number),
+      },
+    );
+    // El resumen se escribe después de marcar la oferta como accepted (lo exigen las reglas).
+    const txOrder = runTransactionMock.mock.invocationCallOrder[0];
+    const summaryCall = setMock.mock.calls.findIndex(
+      ([target]) => (target as { path?: string }).path === `chats/${CHAT_ID}/orders/order-uuid-1`,
+    );
+    expect(setMock.mock.invocationCallOrder[summaryCall]).toBeGreaterThan(txOrder);
+  });
+
+  it('si falla solo el resumen del pedido, el pedido queda aceptado con aviso', async () => {
+    mockGet(offerNode);
+    fetchMock.mockResolvedValue(jsonResponse(201, createdOrder));
+    const server = mockServerValue(offerNode);
+    setMock.mockImplementation((async (target: { path?: string }) => {
+      if (target.path?.includes('/orders/')) throw new Error('PERMISSION_DENIED');
+    }) as unknown as typeof set);
+
+    const result = await approveOffer(API, CHAT_ID, '-Omsg1');
+
+    expect(server.written()).toMatchObject({ status: 'accepted', orderId: 'order-uuid-1' });
+    expect(result.warning).toContain('No se pudo registrar el pedido en el chat');
+  });
+
   it('si la API falla, NO cambia el estado de la oferta', async () => {
     mockGet(offerNode);
     fetchMock.mockResolvedValue(jsonResponse(500, { message: 'No se pudo guardar el pedido' }));
@@ -350,6 +388,7 @@ describe('approveOffer', () => {
     await expect(approveOffer(API, CHAT_ID, '-Omsg1')).rejects.toBeInstanceOf(ApiError);
     expect(runTransactionMock).not.toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
+    expect(setMock).not.toHaveBeenCalled();
   });
 
   it('no llama a la API si la oferta ya fue respondida', async () => {

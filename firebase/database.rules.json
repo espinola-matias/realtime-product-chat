@@ -63,6 +63,47 @@
               ".validate": false
             }
           }
+        },
+        "orders": {
+          ".read": true,
+          ".indexOn": ["createdAt"],
+          "$orderId": {
+            ".write": "!data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['orderId', 'offerMessageId', 'product', 'createdAt']) && root.child('chats/' + $chatId + '/messages/' + newData.child('offerMessageId').val() + '/status').val() === 'accepted' && root.child('chats/' + $chatId + '/messages/' + newData.child('offerMessageId').val() + '/orderId').val() === $orderId",
+            "orderId": {
+              ".validate": "newData.isString() && newData.val() === $orderId"
+            },
+            "offerMessageId": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64"
+            },
+            "product": {
+              ".validate": "newData.hasChildren(['id', 'name', 'price', 'currency'])",
+              "id": {
+                ".validate": "newData.val() === root.child('chats/' + $chatId + '/messages/' + newData.parent().parent().child('offerMessageId').val() + '/product/id').val()"
+              },
+              "name": {
+                ".validate": "newData.val() === root.child('chats/' + $chatId + '/messages/' + newData.parent().parent().child('offerMessageId').val() + '/product/name').val()"
+              },
+              "price": {
+                ".validate": "newData.val() === root.child('chats/' + $chatId + '/messages/' + newData.parent().parent().child('offerMessageId').val() + '/product/price').val()"
+              },
+              "currency": {
+                ".validate": "newData.val() === root.child('chats/' + $chatId + '/messages/' + newData.parent().parent().child('offerMessageId').val() + '/product/currency').val()"
+              },
+              "imageUrl": {
+                ".validate": "newData.val() === root.child('chats/' + $chatId + '/messages/' + newData.parent().parent().child('offerMessageId').val() + '/product/imageUrl').val()"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now + 300000"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
         }
       }
     }
