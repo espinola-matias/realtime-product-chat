@@ -2,18 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type ImageSourcePropType,
   type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageBubble } from '../components/MessageBubble';
 import { ProductOfferCard } from '../components/ProductOfferCard';
-import { colors } from '../components/theme';
+import { colors, fonts, radius } from '../components/theme';
 import type { ChatMessage, ProductOfferMessage, Sender } from '../interfaces/chat-message.interface';
 import {
   approveOffer,
@@ -25,6 +28,10 @@ import {
 } from '../services/chat.service';
 
 const VIEWER: Sender = 'cliente';
+
+const LOGO: ImageSourcePropType = require('../../../assets/logo.png');
+
+const INPUT_MIN_HEIGHT = 44;
 
 interface ChatScreenProps {
   chatId: string;
@@ -145,14 +152,15 @@ export function ChatScreen({ chatId, apiUrl }: ChatScreenProps) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>Comercio</Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            Cliente · chat {chatId}
-          </Text>
-        </View>
+      <View style={styles.header} accessibilityLabel={`Chat ${chatId}`}>
+        <Image source={LOGO} style={styles.logo} accessibilityLabel="App Comercio" />
+        <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
+          <Text style={styles.titleBrand}>Cliente</Text>
+          <Text style={styles.titleSep}> · </Text>
+          Chat
+        </Text>
         <View style={[styles.status, connected && styles.statusOn]}>
+          <View style={[styles.statusDot, connected && styles.statusDotOn]} />
           <Text style={[styles.statusText, connected && styles.statusTextOn]}>
             {connected ? 'En línea' : 'Sin conexión'}
           </Text>
@@ -168,7 +176,7 @@ export function ChatScreen({ chatId, apiUrl }: ChatScreenProps) {
 
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator color={colors.accent} />
+            <ActivityIndicator color={colors.brand} />
             <Text style={styles.hint}>Cargando mensajes…</Text>
           </View>
         ) : (
@@ -188,8 +196,16 @@ export function ChatScreen({ chatId, apiUrl }: ChatScreenProps) {
         )}
 
         {banner && (
-          <Pressable onPress={() => setBanner(null)} accessibilityRole="alert" accessibilityHint="Toque para cerrar">
-            <Text style={banner.kind === 'error' ? styles.error : styles.info}>{banner.text}  ✕</Text>
+          <Pressable
+            onPress={() => setBanner(null)}
+            style={[styles.banner, banner.kind === 'error' ? styles.bannerError : styles.bannerInfo]}
+            accessibilityRole="alert"
+            accessibilityHint="Toque para cerrar"
+          >
+            <Text style={[styles.bannerText, banner.kind === 'error' ? styles.errorText : styles.infoText]}>
+              {banner.text}
+            </Text>
+            <Text style={[styles.bannerClose, banner.kind === 'error' ? styles.errorText : styles.infoText]}>×</Text>
           </Pressable>
         )}
 
@@ -206,7 +222,12 @@ export function ChatScreen({ chatId, apiUrl }: ChatScreenProps) {
             onChangeText={setDraft}
             placeholder="Escriba un mensaje…"
             placeholderTextColor={colors.textMuted}
+            selectionColor={colors.brandBright}
+            cursorColor={colors.brandPressed}
             multiline
+            // En web, multiline es un <textarea> que por defecto mide 2 filas y deja la
+            // letra arriba con espacio sobrante: se fija en 1 fila (crece con maxHeight).
+            numberOfLines={Platform.OS === 'web' ? 1 : undefined}
             maxLength={MAX_TEXT_LENGTH}
             accessibilityLabel="Mensaje"
           />
@@ -230,86 +251,119 @@ export function ChatScreen({ chatId, apiUrl }: ChatScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surfaceRaised },
+  safe: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.surface,
   },
-  headerText: { flex: 1 },
-  title: { fontSize: 18, fontWeight: '700', color: colors.text },
-  subtitle: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  // El logo del cliente es un círculo blanco: borde suave para que no se pierda sobre la cabecera blanca.
+  logo: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.borderStrong },
+  title: { flex: 1, fontFamily: fonts.display, fontSize: 20, color: colors.text, letterSpacing: -0.2 },
+  titleBrand: { fontFamily: fonts.displayBold, color: colors.brandTextLarge },
+  titleSep: { color: colors.textMuted },
   status: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
     backgroundColor: colors.dangerSoft,
   },
   statusOn: { backgroundColor: colors.successSoft },
-  statusText: { fontSize: 12, color: colors.dangerText },
+  statusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.dangerText },
+  statusDotOn: { backgroundColor: colors.successText },
+  statusText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.dangerText },
   statusTextOn: { color: colors.successText },
   body: { flex: 1, backgroundColor: colors.bg },
   list: { flex: 1 },
-  listContent: { paddingHorizontal: 12, paddingVertical: 12, flexGrow: 1 },
+  listContent: { paddingHorizontal: 14, paddingVertical: 14, flexGrow: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  hint: { alignSelf: 'center', marginVertical: 8, fontSize: 13, color: colors.textMuted },
+  hint: {
+    alignSelf: 'center',
+    marginVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.textMuted,
+  },
   // ListEmptyComponent también se invierte con la lista: se corrige aquí.
   flipped: { transform: [{ scaleY: -1 }] },
   error: {
     marginHorizontal: 12,
     marginVertical: 6,
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: radius.md,
+    overflow: 'hidden',
     backgroundColor: colors.dangerSoft,
     color: colors.dangerText,
+    fontFamily: fonts.medium,
     fontSize: 13,
   },
-  info: {
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     marginHorizontal: 12,
     marginVertical: 6,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: colors.warningSoft,
-    color: colors.warningText,
-    fontSize: 13,
+    paddingVertical: 10,
+    paddingLeft: 14,
+    paddingRight: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
   },
+  bannerError: { backgroundColor: colors.dangerSoft, borderColor: colors.dangerBorder },
+  bannerInfo: { backgroundColor: colors.warningSoft, borderColor: colors.borderStrong },
+  bannerText: { flex: 1, fontFamily: fonts.medium, fontSize: 13 },
+  bannerClose: { fontFamily: fonts.bold, fontSize: 18, paddingHorizontal: 4 },
+  errorText: { color: colors.dangerText },
+  infoText: { color: colors.warningText },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.surface,
   },
+  // Alto exacto de 1 línea: lineHeight 20 + padding 11×2 + borde 1×2 = 44 → texto centrado.
   input: {
     flex: 1,
-    minHeight: 42,
+    minHeight: INPUT_MIN_HEIGHT,
     maxHeight: 120,
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 10,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingTop: 11,
+    paddingBottom: 11,
+    lineHeight: 20,
+    textAlignVertical: 'center',
+    borderRadius: INPUT_MIN_HEIGHT / 2,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surfaceRaised,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 15,
   },
   sendButton: {
-    height: 42,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    height: INPUT_MIN_HEIGHT,
+    paddingHorizontal: 20,
+    borderRadius: radius.pill,
     justifyContent: 'center',
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brand,
   },
-  sendButtonDisabled: { opacity: 0.5 },
-  sendButtonPressed: { opacity: 0.8 },
-  sendButtonText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
+  sendButtonDisabled: { opacity: 0.45 },
+  sendButtonPressed: { backgroundColor: colors.brandPressed },
+  sendButtonText: { color: colors.onBrand, fontFamily: fonts.bold, fontSize: 15 },
 });

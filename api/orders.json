@@ -160,5 +160,19 @@
     },
     "status": "created",
     "createdAt": 1794683783344
+  },
+  {
+    "id": "ba51feac-b14e-4e32-a441-461e1a665f90",
+    "chatId": "chat-demo-001",
+    "messageId": "-P6QdFaZabltsnryPK9-",
+    "product": {
+      "id": "p-101",
+      "name": "Bandeja paisa",
+      "price": 32000,
+      "currency": "COP",
+      "imageUrl": "https://ejemplo.com/bandeja.jpg"
+    },
+    "status": "created",
+    "createdAt": 1794686435077
   }
 ]

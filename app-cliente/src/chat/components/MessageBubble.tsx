@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { OrderAcceptedMessage, Sender, TextMessage } from '../interfaces/chat-message.interface';
-import { colors } from './theme';
+import { colors, fonts, radius } from './theme';
 
 interface MessageBubbleProps {
   message: TextMessage | OrderAcceptedMessage;
@@ -8,7 +8,7 @@ interface MessageBubbleProps {
   viewer: Sender;
 }
 
-const senderLabel: Record<Sender, string> = { cliente: 'Cliente', comercio: 'Comercio' };
+const senderLabel: Record<Sender, string> = { cliente: 'CLIENTE', comercio: 'COMERCIO' };
 
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp);
@@ -30,11 +30,15 @@ export function MessageBubble({ message, viewer }: MessageBubbleProps) {
           isConfirmation && styles.bubbleConfirmation,
         ]}
       >
-        {!own && <Text style={styles.sender}>{senderLabel[message.sender]}</Text>}
+        {!own && (
+          <View style={styles.senderChip}>
+            <Text style={styles.sender}>{senderLabel[message.sender]}</Text>
+          </View>
+        )}
         <Text
           style={[
             styles.text,
-            own && !isConfirmation && styles.textOwn,
+            own ? styles.textOwn : styles.textOther,
             isConfirmation && styles.textConfirmation,
           ]}
         >
@@ -49,7 +53,13 @@ export function MessageBubble({ message, viewer }: MessageBubbleProps) {
             </Text>
           </View>
         )}
-        <Text style={[styles.time, own && !isConfirmation && styles.timeOwn]}>
+        <Text
+          style={[
+            styles.time,
+            own ? styles.timeOwn : styles.timeOther,
+            isConfirmation && styles.timeConfirmation,
+          ]}
+        >
           {formatTime(message.createdAt)}
         </Text>
       </View>
@@ -63,38 +73,63 @@ const styles = StyleSheet.create({
   rowOther: { justifyContent: 'flex-start' },
   bubble: {
     maxWidth: '80%',
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 6,
-    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingTop: 9,
+    paddingBottom: 7,
+    borderRadius: radius.lg,
+    gap: 2,
   },
-  bubbleOwn: { backgroundColor: colors.accent, borderBottomRightRadius: 4 },
-  bubbleOther: { backgroundColor: colors.bubbleOther, borderBottomLeftRadius: 4 },
+  // Cliente (propios): naranja claro, cola abajo a la derecha.
+  bubbleOwn: {
+    backgroundColor: colors.bubbleOwn,
+    borderBottomRightRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+  },
+  // Comercio: naranja medio, cola abajo a la izquierda.
+  bubbleOther: { backgroundColor: colors.bubbleOther, borderBottomLeftRadius: 6 },
   bubbleConfirmation: {
     backgroundColor: colors.successSoft,
     borderWidth: 1,
     borderColor: colors.successBorder,
   },
-  sender: { fontSize: 12, fontWeight: '600', color: colors.accent, marginBottom: 2 },
-  text: { fontSize: 15, lineHeight: 20, color: colors.text },
-  textOwn: { color: colors.onAccent },
-  textConfirmation: { color: colors.successText },
+  // “COMERCIO” en una píldora clara: se distingue del texto del mensaje.
+  senderChip: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginBottom: 3,
+    borderRadius: radius.pill,
+    backgroundColor: colors.bubbleOtherNameBg,
+  },
+  sender: {
+    fontFamily: fonts.extrabold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    color: colors.bubbleOtherName,
+  },
+  text: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 21 },
+  textOwn: { color: colors.bubbleOwnText },
+  textOther: { color: colors.bubbleOtherText },
+  textConfirmation: { color: colors.successText, fontFamily: fonts.medium },
   order: {
     marginTop: 6,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.successBorder,
     backgroundColor: colors.surface,
     gap: 2,
   },
-  orderLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.6, color: colors.successText },
+  orderLabel: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.6, color: colors.successText },
   orderId: {
     fontSize: 12,
     color: colors.text,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
   },
-  time: { alignSelf: 'flex-end', fontSize: 11, marginTop: 2, color: colors.textMuted },
-  timeOwn: { color: colors.onAccentMuted },
+  time: { alignSelf: 'flex-end', fontFamily: fonts.semibold, fontSize: 11, marginTop: 2 },
+  timeOwn: { color: colors.bubbleOwnTime },
+  timeOther: { color: colors.bubbleOtherTime },
+  timeConfirmation: { color: colors.successText },
 });

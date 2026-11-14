@@ -19,7 +19,15 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "name": "Cliente · Chat",
+      "shortName": "Cliente",
+      "themeColor": "#f97316",
+      "backgroundColor": "#fff6ee"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "backgroundColor": "#fff6ee"
   }
 }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { OfferStatus, ProductOfferMessage } from '../interfaces/chat-message.interface';
 import { formatPrice } from '../services/currency';
-import { colors } from './theme';
+import { colors, fonts, radius } from './theme';
 
 interface ProductOfferCardProps {
   message: ProductOfferMessage;
@@ -82,7 +82,12 @@ export function ProductOfferCard({ message, onAccept, onReject, answering = fals
         </View>
 
         {status === 'accepted' && message.orderId && (
-          <Text style={styles.note} selectable>N.º de pedido {message.orderId}</Text>
+          <View style={styles.note}>
+            <Text style={styles.noteLabel}>N.º DE PEDIDO</Text>
+            <Text style={styles.noteValue} selectable>
+              {message.orderId}
+            </Text>
+          </View>
         )}
 
         {showActions && (
@@ -104,7 +109,7 @@ export function ProductOfferCard({ message, onAccept, onReject, answering = fals
               accessibilityLabel={`Aprobar ${product.name}`}
             >
               {answering ? (
-                <ActivityIndicator color={colors.onAccent} size="small" />
+                <ActivityIndicator color={colors.onBrand} size="small" />
               ) : (
                 <Text style={styles.acceptText}>Aprobar</Text>
               )}
@@ -124,43 +129,60 @@ export function ProductOfferCard({ message, onAccept, onReject, answering = fals
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'flex-start', marginVertical: 6 },
   card: {
-    width: '85%',
-    maxWidth: 360,
-    padding: 12,
-    gap: 10,
-    borderRadius: 14,
-    borderBottomLeftRadius: 4,
+    width: '88%',
+    maxWidth: 380,
+    padding: 14,
+    gap: 12,
+    borderRadius: radius.lg,
+    borderBottomLeftRadius: 6,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
+    shadowColor: '#7a3a10',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   cardAccepted: { borderColor: colors.successBorder },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  kicker: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5, color: colors.accent },
-  badge: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  body: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  image: { width: 72, height: 72, borderRadius: 10, backgroundColor: colors.bg },
-  imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  imagePlaceholderText: { fontSize: 26, fontWeight: '700', color: colors.textMuted },
+  kicker: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 0.6, color: colors.brandText },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  badgeText: { fontFamily: fonts.semibold, fontSize: 11 },
+  body: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  image: { width: 76, height: 76, borderRadius: radius.md, backgroundColor: colors.bg },
+  imagePlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandBright },
+  imagePlaceholderText: { fontFamily: fonts.displayBold, fontSize: 28, color: colors.text },
   info: { flex: 1, minWidth: 0 },
-  name: { fontSize: 16, fontWeight: '600', color: colors.text },
-  price: { fontSize: 18, fontWeight: '700', color: colors.text, marginTop: 4 },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  name: { fontFamily: fonts.display, fontSize: 16, color: colors.text },
+  price: { fontFamily: fonts.displayBold, fontSize: 19, color: colors.brandTextLarge, marginTop: 4 },
+  meta: { fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   strike: { textDecorationLine: 'line-through', color: colors.textMuted },
-  note: { fontSize: 12, color: colors.textMuted },
-  actions: { flexDirection: 'row', gap: 8 },
+  note: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    backgroundColor: colors.successSoft,
+    gap: 2,
+  },
+  noteLabel: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.6, color: colors.successText },
+  noteValue: {
+    fontSize: 12,
+    color: colors.text,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
+  },
+  actions: { flexDirection: 'row', gap: 10 },
   button: {
     flex: 1,
-    height: 42,
-    borderRadius: 10,
+    height: 46,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  accept: { backgroundColor: colors.accent },
-  acceptText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
-  reject: { backgroundColor: colors.dangerSoft },
-  rejectText: { color: colors.dangerText, fontWeight: '700', fontSize: 15 },
+  accept: { backgroundColor: colors.brand, borderWidth: 1, borderColor: colors.brandPressed },
+  acceptText: { fontFamily: fonts.bold, color: colors.onBrand, fontSize: 15 },
+  reject: { backgroundColor: colors.dangerSoft, borderWidth: 1, borderColor: colors.dangerBorder },
+  rejectText: { fontFamily: fonts.bold, color: colors.dangerText, fontSize: 15 },
   dimmed: { opacity: 0.6 },
-  time: { alignSelf: 'flex-end', fontSize: 11, color: colors.textMuted },
+  time: { alignSelf: 'flex-end', fontFamily: fonts.medium, fontSize: 11, color: colors.textMuted },
 });
