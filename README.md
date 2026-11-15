@@ -81,7 +81,8 @@ Chat entre un **cliente móvil** (React Native · Expo) y un **comercio web** (R
 
 ## Requisitos
 
-- **Node.js 20 o superior** (probado con Node 22) y npm 10.
+- **Node.js 22 o superior** (recomendado 24 LTS) y npm 10. Con Node 22, `npm install` muestra avisos `EBADENGINE` de Firebase que no afectan el funcionamiento.
+- Los avisos `deprecated` y las alertas de `npm audit` al instalar vienen de herramientas de desarrollo (Jest, Vitest, Expo) y de Firestore, que viene incluido en el paquete `firebase`. No ejecute `npm audit fix --force`: baja Firebase a la versión 9 y rompe las apps.
 - Una **cuenta de Firebase**.
 - Para el cliente móvil, una de estas opciones (detalle en [Cliente móvil](#cliente-móvil)):
   navegador web · emulador Android (Android Studio) · teléfono con **Expo Go** · simulador iOS (macOS).
